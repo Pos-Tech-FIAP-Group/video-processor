@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.fiap.fiapx</groupId>
+        <artifactId>video-processor</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>api-gateway</artifactId>
+    <name>API Gateway</name>
+    <!-- ALTERAR: trocar para <packaging>jar</packaging> quando começar a implementar o serviço -->
+    <packaging>pom</packaging>
+
+    <!-- ALTERAR: ao implementar, adicionar <dependencies> aqui.
+         Ex.: spring-cloud-starter-gateway, spring-boot-starter-actuator, lombok, etc.
+         Ver referência em 0-docs/guia-inicio-projeto.md (seção API Gateway). -->
+
+    <!-- ALTERAR: ao implementar, adicionar <build><plugins> com spring-boot-maven-plugin
+         para gerar o JAR executável. -->
+</project>

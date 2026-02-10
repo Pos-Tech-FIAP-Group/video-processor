@@ -1,0 +1,53 @@
+# Documentação de desenvolvimento (apenas uso local)
+0-docs/
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Storage (vídeos, temporários, outputs)
+storage/
+uploads/
+outputs/
+temp/
+
+# Environment / config local
+.env
+.env.local
+application-local.yml
+application-dev.yml
+*.env
+
+# Docker
+docker-compose.override.yml
+
+# Cobertura e relatórios de build
+*.exec
+*.class
+hs_err_pid*
