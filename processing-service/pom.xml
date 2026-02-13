@@ -13,14 +13,25 @@
 
     <artifactId>processing-service</artifactId>
     <name>Processing Service</name>
-    <!-- ALTERAR: trocar para <packaging>jar</packaging> quando começar a implementar o serviço -->
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <!-- ALTERAR: ao implementar, adicionar <dependencies> aqui.
-         Ex.: spring-boot-starter-amqp, spring-boot-starter-web, actuator, lombok,
-         spring-boot-starter-test.
-         Ver referência em 0-docs/guia-inicio-projeto.md (seção Processing Service). -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+    </dependencies>
 
-    <!-- ALTERAR: ao implementar, adicionar <build><plugins> com spring-boot-maven-plugin
-         para gerar o JAR executável. -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
