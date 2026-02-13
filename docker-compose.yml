@@ -1,6 +1,17 @@
+      retries: 10
+  
 version: "3.8"
 
 services:
+  processing-service:
+    build:
+      context: .
+      dockerfile: processing-service/Dockerfile
+    image: video-processor/processing-service:latest
+    container_name: processing-service
+    ports:
+      - "8082:8082"  
+      
   mongodb:
     image: mongo:7
     container_name: mongodb-auth
