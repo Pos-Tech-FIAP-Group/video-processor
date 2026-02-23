@@ -13,14 +13,56 @@
 
     <artifactId>video-service</artifactId>
     <name>Video Service</name>
-    <!-- ALTERAR: trocar para <packaging>jar</packaging> quando começar a implementar o serviço -->
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <!-- ALTERAR: ao implementar, adicionar <dependencies> aqui.
-         Ex.: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-amqp,
-         postgresql, actuator, lombok, spring-boot-starter-test.
-         Ver referência em 0-docs/guia-inicio-projeto.md (seção Video Service). -->
+    <dependencies>
 
-    <!-- ALTERAR: ao implementar, adicionar <build><plugins> com spring-boot-maven-plugin
-         para gerar o JAR executável. -->
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Actuator (health check) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Swagger/OpenAPI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+             Bean Validation (Jakarta Validation API)
+             Necessário para suporte a anotações como @NotNull, @NotBlank, @Valid em DTOs.
+             Também remove o warning de inicialização do Spring Boot sobre ausência de provider.
+             Será utilizado nos endpoints de upload e criação de vídeos.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
