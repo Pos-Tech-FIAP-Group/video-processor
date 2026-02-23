@@ -5,6 +5,22 @@ spring:
   application:
     name: video-service
 
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/video_db}
+    username: ${SPRING_DATASOURCE_USERNAME:video_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:video_pass}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
 management:
   endpoints:
     web:
