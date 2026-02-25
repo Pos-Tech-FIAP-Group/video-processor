@@ -5,6 +5,8 @@ import com.fiap.fiapx.video.adapters.driven.infra.persistence.mapper.VideoMapper
 import com.fiap.fiapx.video.adapters.driven.infra.persistence.repository.VideoJpaRepository;
 import com.fiap.fiapx.video.core.application.ports.VideoRepositoryPort;
 import com.fiap.fiapx.video.core.domain.model.Video;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,13 +16,10 @@ import java.util.UUID;
 import static java.util.stream.Collectors.toList;
 
 @Component
+@RequiredArgsConstructor
 public class VideoPersistenceAdapter implements VideoRepositoryPort {
 
     private final VideoJpaRepository repository;
-
-    public VideoPersistenceAdapter(VideoJpaRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public Video save(Video video) {

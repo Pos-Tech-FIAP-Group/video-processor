@@ -2,7 +2,10 @@ package com.fiap.fiapx.video.adapters.driver.api.controller;
 
 import com.fiap.fiapx.video.adapters.driver.api.dto.request.CreateVideoRequest;
 import com.fiap.fiapx.video.adapters.driver.api.dto.response.CreateVideoResponse;
+import com.fiap.fiapx.video.adapters.driver.api.dto.response.VideoResponse;
+import com.fiap.fiapx.video.adapters.driver.api.mapper.VideoApiMapper;
 import com.fiap.fiapx.video.core.application.usecases.CreateVideoUseCase;
+import com.fiap.fiapx.video.core.application.usecases.FindVideoByIdUseCase;
 import com.fiap.fiapx.video.core.application.usecases.command.CreateVideoCommand;
 import com.fiap.fiapx.video.core.domain.model.Video;
 import jakarta.validation.Valid;
@@ -19,6 +22,7 @@ import java.util.UUID;
 public class VideoController {
 
     private final CreateVideoUseCase createVideoUseCase;
+    private final FindVideoByIdUseCase findVideoByIdUseCase ;
 
     @PostMapping
     public ResponseEntity<CreateVideoResponse> create(
@@ -44,4 +48,11 @@ public class VideoController {
                 .created(URI.create("/api/videos/" + saved.getId()))
                 .body(response);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VideoResponse> findById(@PathVariable("id") UUID id) {
+        var video = findVideoByIdUseCase.execute(id);
+        return ResponseEntity.ok(VideoApiMapper.toResponse(video));
+    }
+
 }
