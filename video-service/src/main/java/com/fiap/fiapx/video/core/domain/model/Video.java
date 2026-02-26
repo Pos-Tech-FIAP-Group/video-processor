@@ -44,20 +44,16 @@ public class Video {
     ) {
         this.id = Objects.requireNonNull(id, "Id é obrigatório");
         this.userId = Objects.requireNonNull(userId, "UserId é obrigatório");
-
         this.originalFilename = requireNonBlank(originalFilename, "Nome original do arquivo é obrigatório");
         this.contentType = requireNonBlank(contentType, "Content-Type é obrigatório");
-
         this.videoPath = requireNonBlank(videoPath, "Caminho do vídeo é obrigatório");
-        this.zipPath = zipPath;
-
         this.status = Objects.requireNonNull(status, "Status é obrigatório");
-
-        this.frameCount = frameCount;
-        this.errorMessage = errorMessage;
-
         this.createdAt = Objects.requireNonNull(createdAt, "Data de criação é obrigatória");
         this.updatedAt = Objects.requireNonNull(updatedAt, "Data de atualização é obrigatória");
+
+        this.zipPath = zipPath;
+        this.frameCount = frameCount;
+        this.errorMessage = errorMessage;
         this.processedAt = processedAt;
     }
 
@@ -77,12 +73,75 @@ public class Video {
                 contentType,
                 videoPath,
                 null,
-                VideoStatus.PENDENTE,
+                VideoStatus.PROCESSANDO,
                 null,
                 null,
                 now,
                 now,
                 null
+        );
+    }
+
+
+    public Video completeProcessing(Integer frameCount, String zipPath) {
+        if (this.status != VideoStatus.PROCESSANDO) {
+            throw new IllegalStateException(
+                    "Não é possível finalizar o processamento a partir do status " + this.status
+            );
+        }
+
+        if (frameCount == null || frameCount < 0) {
+            throw new IllegalArgumentException("frameCount inválido");
+        }
+
+        if (zipPath == null || zipPath.isBlank()) {
+            throw new IllegalArgumentException("zipPath é obrigatório");
+        }
+
+        Instant now = Instant.now();
+
+        return new Video(
+                this.id,
+                this.userId,
+                this.originalFilename,
+                this.contentType,
+                this.videoPath,
+                zipPath,
+                VideoStatus.CONCLUIDO,
+                frameCount,
+                null,
+                this.createdAt,
+                now,
+                now
+        );
+    }
+
+    public Video failProcessing(String errorMessage) {
+        if (this.status != VideoStatus.PROCESSANDO) {
+            throw new IllegalStateException(
+                    "Não é possível marcar erro a partir do status " + this.status
+            );
+        }
+
+        if (errorMessage == null || errorMessage.isBlank()) {
+            throw new IllegalArgumentException("mensagem de erro é obrigatória");
+        }
+
+        Instant now = Instant.now();
+
+        return new Video(
+                this.id,
+                this.userId,
+                this.originalFilename,
+                this.contentType,
+                this.videoPath,
+                this.zipPath,
+                VideoStatus.ERRO,
+                this.frameCount,
+                errorMessage,
+                this.createdAt,
+                now,
+                now
         );
     }
 

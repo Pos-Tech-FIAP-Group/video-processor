@@ -39,17 +39,9 @@ public class VideoController {
                 request.videoPath()
         );
 
-        Video saved = createVideoUseCase.execute(command);
+        createVideoUseCase.execute(command);
 
-        CreateVideoResponse response = new CreateVideoResponse(
-                saved.getId(),
-                saved.getStatus(),
-                saved.getCreatedAt()
-        );
-
-        return ResponseEntity
-                .created(URI.create("/api/videos/" + saved.getId()))
-                .body(response);
+        return ResponseEntity.accepted().build();
     }
 
     @GetMapping("/{id}")
