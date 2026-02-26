@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: processing-service/Dockerfile
-    image: video-processor/processing-service:latest
+#    image: video-processor/processing-service:latest
     container_name: processing-service
     ports:
       - "8082:8082"  
