@@ -1,0 +1,18 @@
+# Build outputs
+**/target/
+**/build/
+
+# Git e IDE
+.git
+.gitignore
+.idea
+*.iml
+.vscode
+
+# Docs (não necessários na imagem)
+0-docs
+*.md
+!README.md
+
+# Outros módulos (reduz contexto; o Dockerfile copia só o necessário)
+# (deixamos o Compose usar context: . para ter o pom.xml raiz)

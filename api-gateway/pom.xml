@@ -13,13 +13,38 @@
 
     <artifactId>api-gateway</artifactId>
     <name>API Gateway</name>
-    <!-- ALTERAR: trocar para <packaging>jar</packaging> quando começar a implementar o serviço -->
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <!-- ALTERAR: ao implementar, adicionar <dependencies> aqui.
-         Ex.: spring-cloud-starter-gateway, spring-boot-starter-actuator, lombok, etc.
-         Ver referência em 0-docs/guia-inicio-projeto.md (seção API Gateway). -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 
-    <!-- ALTERAR: ao implementar, adicionar <build><plugins> com spring-boot-maven-plugin
-         para gerar o JAR executável. -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <jvmArguments>-Djava.net.preferIPv4Stack=true</jvmArguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

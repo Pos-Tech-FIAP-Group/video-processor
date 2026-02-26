@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb-auth
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-change-in-production-min-256-bits}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+
+volumes:
+  mongodb_data:
