@@ -4,3 +4,47 @@ server:
 spring:
   application:
     name: processing-service
+  
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:admin}
+    password: ${SPRING_RABBITMQ_PASSWORD:admin123}
+    
+    # Processing queue configuration
+    processing:
+      exchange: video.processing.exchange
+      queue: video.processing.queue
+      routing-key: video.processing.request
+    
+    # Events: processing-service publica conclusão na fila consumida pelo video-service
+    events:
+      exchange: video.processing.events.exchange
+      queue:
+        completed: video_processing_completed_queue
+        failed: video_processing_failed_queue
+      routing-key:
+        completed: video.processing.completed
+        failed: video.processing.failed
+    
+    # Dead Letter Queue
+    dlq:
+      exchange: video.processing.dlq.exchange
+      queue: video.processing.dlq
+    
+    # Listener configuration (paralelismo)
+    listener:
+      concurrency:
+        min: 5
+        max: 20
+      prefetch: 10
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.fiap.fiapx.processing: DEBUG
+    org.springframework.amqp: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{videoId}] %logger{36} - %msg%n"
