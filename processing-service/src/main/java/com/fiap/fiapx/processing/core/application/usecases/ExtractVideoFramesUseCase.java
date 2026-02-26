@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Path;
 
 /**
- * Use case: extract one frame per second from a video and produce a zip file in the same path.
+ * Use case: extract frames from a video at a given interval and produce a zip file in the same path.
  */
 @Component
 public class ExtractVideoFramesUseCase {
@@ -21,9 +21,10 @@ public class ExtractVideoFramesUseCase {
      * Processes the video at the given path and returns the path to the generated zip of frames.
      *
      * @param videoPath path to the video file
+     * @param frameIntervalSeconds interval in seconds between extracted frames (e.g. 1.0 = one per second)
      * @return path to the created zip file (in the same directory as the video)
      */
-    public Path execute(Path videoPath) {
-        return videoFrameExtractorPort.extractFramesPerSecondToZip(videoPath);
+    public Path execute(Path videoPath, double frameIntervalSeconds) {
+        return videoFrameExtractorPort.extractFramesToZip(videoPath, frameIntervalSeconds);
     }
 }

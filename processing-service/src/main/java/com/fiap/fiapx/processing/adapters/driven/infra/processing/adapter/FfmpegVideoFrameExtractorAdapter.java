@@ -6,14 +6,16 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
+import java.time.Instant;
 import java.util.Comparator;
+import java.util.UUID;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Extracts one frame per second from a video using FFmpeg and packages the images into a zip file
- * in the same directory as the source video.
+ * Extracts frames from a video at a configurable interval using FFmpeg and packages the images
+ * into a zip file in the same directory as the source video.
  * <p>
  * Requires FFmpeg to be installed and available on the system PATH.
  * </p>
@@ -22,12 +24,14 @@ import java.util.zip.ZipOutputStream;
 public class FfmpegVideoFrameExtractorAdapter implements VideoFrameExtractorPort {
 
     private static final String FRAME_PATTERN = "frame_%04d.png";
-    private static final String ZIP_SUFFIX = "_frames.zip";
 
     @Override
-    public Path extractFramesPerSecondToZip(Path videoPath) {
+    public Path extractFramesToZip(Path videoPath, double frameIntervalSeconds) {
         if (videoPath == null || !Files.isRegularFile(videoPath)) {
             throw new IllegalArgumentException("Video path must point to an existing file: " + videoPath);
+        }
+        if (frameIntervalSeconds <= 0) {
+            throw new IllegalArgumentException("frameIntervalSeconds must be greater than 0: " + frameIntervalSeconds);
         }
 
         Path outputDir = videoPath.getParent();
@@ -38,12 +42,12 @@ public class FfmpegVideoFrameExtractorAdapter implements VideoFrameExtractorPort
         Path tempDir = null;
         try {
             tempDir = Files.createTempDirectory("video-frames-");
-            Path framesOutput = tempDir.resolve("frame_%04d.png");
 
-            extractFramesWithFfmpeg(videoPath, tempDir);
+            extractFramesWithFfmpeg(videoPath, tempDir, frameIntervalSeconds);
 
             String baseName = getBaseName(videoPath);
-            Path zipPath = outputDir.resolve(baseName + ZIP_SUFFIX);
+            String uniqueZipName = baseName + "_frames_" + uniqueSuffix() + ".zip";
+            Path zipPath = outputDir.resolve(uniqueZipName);
             zipFrames(tempDir, zipPath);
 
             return zipPath;
@@ -56,12 +60,13 @@ public class FfmpegVideoFrameExtractorAdapter implements VideoFrameExtractorPort
         }
     }
 
-    private void extractFramesWithFfmpeg(Path videoPath, Path outputDir) throws IOException {
+    private void extractFramesWithFfmpeg(Path videoPath, Path outputDir, double frameIntervalSeconds) throws IOException {
         Path outputPattern = outputDir.resolve(FRAME_PATTERN);
+        double fps = 1.0 / frameIntervalSeconds;
         ProcessBuilder pb = new ProcessBuilder(
                 "ffmpeg",
                 "-i", videoPath.toAbsolutePath().toString(),
-                "-vf", "fps=1",
+                "-vf", String.format("fps=%.2f", fps),
                 "-y",
                 outputPattern.toAbsolutePath().toString()
         );
@@ -107,6 +112,11 @@ public class FfmpegVideoFrameExtractorAdapter implements VideoFrameExtractorPort
         String fileName = path.getFileName().toString();
         int lastDot = fileName.lastIndexOf('.');
         return lastDot > 0 ? fileName.substring(0, lastDot) : fileName;
+    }
+
+    /** Generates a unique suffix for the zip filename so each run produces a new file (no overwrite). */
+    private static String uniqueSuffix() {
+        return Instant.now().getEpochSecond() + "_" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     private static void deleteRecursively(Path path) {

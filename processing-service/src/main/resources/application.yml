@@ -1,6 +1,11 @@
 server:
   port: 8082
 
+# Base path for video files. Request paths are relative to this (e.g. "video.mp4" or "video1/video.mp4" -> /data/video.mp4).
+processing:
+  storage:
+    base-path: ${PROCESSING_STORAGE_BASE_PATH:/data}
+
 spring:
   application:
     name: processing-service

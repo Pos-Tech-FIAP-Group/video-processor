@@ -61,6 +61,7 @@ Variáveis de ambiente principais:
 | `SPRING_RABBITMQ_PORT` | Porta AMQP | `5672` |
 | `SPRING_RABBITMQ_USERNAME` | Usuário | `admin` |
 | `SPRING_RABBITMQ_PASSWORD` | Senha | `admin123` |
+| `PROCESSING_STORAGE_BASE_PATH` | Diretório base para vídeos (paths da API são relativos a ele) | `/data` |
 
 Demais opções (exchanges, queues, concorrência) estão em `src/main/resources/application.yml`.
 
@@ -91,6 +92,30 @@ mvn -pl processing-service test
 ```
 
 Testes de integração usam **Testcontainers** para subir um RabbitMQ efêmero.
+
+## API REST – Endpoint e como testar
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/process/extract-frames` | Extrai frames do vídeo em um intervalo configurável e gera um ZIP no mesmo diretório. |
+
+**Request (JSON):**
+- `videoPath` (obrigatório): path **relativo ao diretório base** (ex.: `/data`). Aceita `video.mp4`, `video1/video.mp4`, com ou sem barra no início — o serviço resolve sempre sob o base path.
+- `frameIntervalSeconds` (opcional): intervalo em segundos entre um frame e outro. Default `1.0`. Se informado, deve ser > 0.
+
+```json
+{"videoPath": "video.mp4"}
+{"videoPath": "video1/video.mp4", "frameIntervalSeconds": 2.0}
+```
+
+**Response 200:** `{"zipPath": "/data/video_frames.zip"}`
+
+**Exemplo curl** (base path `/data`, volume `./storage:/data`):
+```bash
+curl -X POST http://localhost:8082/api/process/extract-frames \
+  -H "Content-Type: application/json" \
+  -d '{"videoPath": "video.mp4", "frameIntervalSeconds": 2.0}'
+```
 
 ## Integração com o Video Service
 
