@@ -9,8 +9,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configuração de segurança. Rotas públicas: registro, login e actuator.
- * Demais rotas (/auth/validate, /auth/users/**) exigem JWT válido no header Authorization.
+ * Configuração de segurança. Rotas públicas: registro, login, validação de token e actuator.
+ * /auth/validate permite validar JWT via query (?token=...) para o Gateway ou clientes.
+ * Demais rotas (/auth/users/**) exigem JWT válido no header Authorization.
  */
 @Configuration
 @EnableWebSecurity
@@ -29,7 +30,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/validate").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
