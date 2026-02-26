@@ -1,4 +1,4 @@
-package com.fiap.fiapx.video.infra.persistence;
+package com.fiap.fiapx.video.infra.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
