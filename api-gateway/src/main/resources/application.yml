@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+# Definido pelo entrypoint no Docker (IP do auth-service). Sem default = uso apenas via Docker.
+auth:
+  service-url: ${AUTH_SERVICE_URL}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/**
+        - id: video-service
+          uri: http://video-service:8082
+          predicates:
+            - Path=/api/videos/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

@@ -1,0 +1,147 @@
+{
+  "info": {
+    "name": "API Gateway - Video Processor",
+    "description": "Endpoints do Auth via API Gateway (porta 8080).\n\nRotas públicas: /api/auth/register, /api/auth/login, /api/auth/validate, /actuator/health.\nRotas protegidas (exigem header Authorization: Bearer <token>): /api/auth/users/{id}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Públicos",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"postman@example.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Registra novo usuário via gateway. 201 + UserResponse. Salva userId para usar em Get User."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.id) pm.collectionVariables.set('userId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Login via gateway. 200 + token, type, expiresIn, username. Salva token para rotas protegidas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.token) pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/validate?token={{token}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "validate"],
+              "query": [{ "key": "token", "value": "{{token}}" }]
+            },
+            "description": "Valida o JWT via gateway (rota pública). 200 + valid, subject."
+          }
+        },
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health",
+            "description": "Health check do gateway. Público."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protegidos (exigem token)",
+      "item": [
+        {
+          "name": "Get User by Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}",
+            "description": "Retorna usuário por id via gateway. Exige Authorization: Bearer <token>. 200 + id, username, email, enabled. Use userId salvo no Register."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exemplos de erro",
+      "item": [
+        {
+          "name": "Register (duplicata - 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"outro@example.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Mesmo username já existente. Esperado 400."
+          }
+        },
+        {
+          "name": "Login (senha errada - 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha_errada\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Credenciais inválidas. Esperado 401."
+          }
+        },
+        {
+          "name": "Get User sem token (401)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}",
+            "description": "Sem header Authorization. Esperado 401 (gateway)."
+          }
+        }
+      ]
+    }
+  ]
+}
