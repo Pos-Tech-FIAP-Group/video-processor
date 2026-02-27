@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Filtro que valida JWT em rotas protegidas chamando o Auth Service GET /auth/validate.
+ * Filtro que valida JWT em rotas protegidas chamando o Auth Service GET /api/auth/validate.
  * Rotas públicas (/api/auth/register, /api/auth/login, /api/auth/validate) não passam pela validação.
  */
 @Component
@@ -69,7 +69,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
         }
 
         // java.net.http.HttpClient para chamar o Auth (sem contexto reativo do Gateway = sempre 8081)
-        String validateUrl = authServiceUrl + "/auth/validate?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+        String validateUrl = authServiceUrl + "/api/auth/validate?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
 
         return Mono.fromCallable(() -> callAuthValidate(validateUrl))
                 .subscribeOn(Schedulers.boundedElastic())

@@ -22,7 +22,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"postman@example.com\",\n  \"password\": \"senha123\"\n}"
             },
-            "url": "{{baseUrl}}/auth/register",
+            "url": "{{baseUrl}}/api/auth/register",
             "description": "Registra novo usuário. 201 + UserResponse. Salva userId para usar em Get User."
           },
           "event": [
@@ -49,7 +49,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha123\"\n}"
             },
-            "url": "{{baseUrl}}/auth/login",
+            "url": "{{baseUrl}}/api/auth/login",
             "description": "Login. 200 + token, type, expiresIn, username. Salva token para rotas protegidas."
           },
           "event": [
@@ -88,9 +88,9 @@
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/auth/validate?token={{token}}",
+              "raw": "{{baseUrl}}/api/auth/validate?token={{token}}",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "validate"],
+              "path": ["api", "auth", "validate"],
               "query": [{ "key": "token", "value": "{{token}}" }]
             },
             "description": "Valida o JWT. Exige header Authorization. 200 + valid, subject."
@@ -103,7 +103,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{baseUrl}}/auth/users/{{userId}}",
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}",
             "description": "Retorna usuário por id. Exige token. 200 + id, username, email, enabled. Use userId salvo no Register."
           }
         }
@@ -121,7 +121,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"outro@example.com\",\n  \"password\": \"senha123\"\n}"
             },
-            "url": "{{baseUrl}}/auth/register",
+            "url": "{{baseUrl}}/api/auth/register",
             "description": "Mesmo username já existente. Esperado 400."
           }
         },
@@ -134,7 +134,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha_errada\"\n}"
             },
-            "url": "{{baseUrl}}/auth/login",
+            "url": "{{baseUrl}}/api/auth/login",
             "description": "Credenciais inválidas. Esperado 401."
           }
         },
@@ -142,7 +142,7 @@
           "name": "Get User sem token (403)",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/auth/users/{{userId}}",
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}",
             "description": "Sem header Authorization. Esperado 403."
           }
         }
