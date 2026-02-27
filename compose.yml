@@ -1,26 +1,14 @@
 services:
   # --- Application Services ---
-  processing-service:
+  api-gateway:
     build:
       context: .
-      dockerfile: processing-service/Dockerfile
-#    image: video-processor/processing-service:latest
-    container_name: processing-service
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
     ports:
-      - "8082:8082"  
-      
-  mongodb:
-    image: mongo:7
-    container_name: mongodb-auth
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "8080:8080"
+    depends_on:
+      - auth-service
 
   auth-service:
     build:
@@ -35,29 +23,14 @@ services:
       mongodb:
         condition: service_healthy
 
-  api-gateway:
+  processing-service:
     build:
       context: .
-      dockerfile: api-gateway/Dockerfile
-    container_name: api-gateway
+      dockerfile: processing-service/Dockerfile
+    #    image: video-processor/processing-service:latest
+    container_name: processing-service
     ports:
-      - "8080:8080"
-    depends_on:
-      - auth-service
-
-  postgres-video:
-    image: postgres:16-alpine
-    container_name: postgres-video
-    environment:
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
-      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
-    volumes:
-      - ./storage:/data
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+      - "8082:8082"
 
   # --- Infrastructure Services ---
   rabbitmq:
@@ -76,6 +49,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb-auth
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -106,6 +92,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+#  postgres-video:
+#    image: postgres:16-alpine
+#    container_name: postgres-video
+#    environment:
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+#      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+#    volumes:
+#      - ./storage:/data
+#    depends_on:
+#      rabbitmq:
+#        condition: service_healthy
 
 volumes:
   mongodb_data:
