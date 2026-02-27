@@ -1,0 +1,4 @@
+services:
+  processing-service:
+    volumes:
+      - ./storage:/data

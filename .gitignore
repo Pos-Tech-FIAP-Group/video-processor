@@ -15,6 +15,7 @@ buildNumber.properties
 
 # IDE
 .idea/
+.m2-repo
 *.iws
 *.iml
 *.ipr

@@ -16,3 +16,33 @@
 
 # Outros módulos (reduz contexto; o Dockerfile copia só o necessário)
 # (deixamos o Compose usar context: . para ter o pom.xml raiz)
+
+# Git and IDE
+.git
+.idea
+.vscode
+*.iml
+
+# Maven
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Docs and misc
+0-docs
+*.md
+!README.md
+
+# Local config
+.env
+.env.*
+application-local.yml
+application-dev.yml
+
+# Avoid copying large videos into build context (mount at run if needed)
+*.mp4
+*.mov
+*.avi
+storage/
+uploads/
+outputs/
+temp/
