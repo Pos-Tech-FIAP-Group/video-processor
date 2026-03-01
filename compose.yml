@@ -32,6 +32,12 @@ services:
     ports:
       - "8082:8082"
 
+  video-service:
+    volumes:
+      - ./tmp/videos:/shared/videos
+    environment:
+      APP_STORAGE_TEMP_DIR: /shared/videos
+
   # --- Infrastructure Services ---
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
