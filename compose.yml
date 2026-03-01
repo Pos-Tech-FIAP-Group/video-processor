@@ -1,0 +1,113 @@
+services:
+  # --- Application Services ---
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-change-in-production-min-256-bits}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  processing-service:
+    build:
+      context: .
+      dockerfile: processing-service/Dockerfile
+    #    image: video-processor/processing-service:latest
+    container_name: processing-service
+    ports:
+      - "8082:8082"
+
+  # --- Infrastructure Services ---
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin123}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb-auth
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-video:
+    image: postgres:16-alpine
+    container_name: postgres-video
+    environment:
+      POSTGRES_DB: ${POSTGRES_VIDEO_DB:-video_db}
+      POSTGRES_USER: ${POSTGRES_VIDEO_USER:-video_user}
+      POSTGRES_PASSWORD: ${POSTGRES_VIDEO_PASSWORD:-video_pass}
+    ports:
+      - "${POSTGRES_VIDEO_PORT:-5434}:5432"
+    volumes:
+      - postgres_video_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_VIDEO_USER:-video_user} -d ${POSTGRES_VIDEO_DB:-video_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+#  postgres-video:
+#    image: postgres:16-alpine
+#    container_name: postgres-video
+#    environment:
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+#      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+#    volumes:
+#      - ./storage:/data
+#    depends_on:
+#      rabbitmq:
+#        condition: service_healthy
+
+volumes:
+  mongodb_data:
+  postgres_video_data:
+  rabbitmq_data:

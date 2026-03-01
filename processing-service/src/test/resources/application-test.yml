@@ -1,0 +1,19 @@
+spring:
+  rabbitmq:
+    processing:
+      exchange: video.processing.exchange
+      queue: video.processing.queue
+      routing-key: video.processing.request
+    events:
+      exchange: video.processing.events.exchange
+      queue:
+        completed: video_processing_completed_queue
+        failed: video_processing_failed_queue
+      routing-key:
+        completed: video.processing.completed
+        failed: video.processing.failed
+
+logging:
+  level:
+    com.fiap.fiapx.processing: DEBUG
+    org.springframework.amqp: DEBUG
