@@ -18,3 +18,10 @@ Cada microsserviço segue o **mesmo padrão de pastas** para facilitar o trabalh
 | Processing Service | `processing-service/`  | —           |
 | Notification Service | `notification-service/` | —         |
 
+# Video Service (FIAP X)
+
+Monorepo do sistema de processamento de vídeos (microsserviços).
+
+## Como rodar (Video Service)
+
+Veja instruções em `video-service/README.md`.
