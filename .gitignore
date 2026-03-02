@@ -37,6 +37,7 @@ storage/
 uploads/
 outputs/
 temp/
+/tmp/
 
 # Environment / config local
 .env
@@ -52,3 +53,4 @@ docker-compose.override.yml
 *.exec
 *.class
 hs_err_pid*
+

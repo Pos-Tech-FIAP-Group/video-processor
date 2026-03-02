@@ -1,21 +1,20 @@
 package com.fiap.fiapx.video.adapters.driver.api.controller;
 
 import com.fiap.fiapx.video.adapters.driven.infra.persistence.repository.PagedResponse;
-import com.fiap.fiapx.video.adapters.driver.api.dto.request.CreateVideoRequest;
 import com.fiap.fiapx.video.adapters.driver.api.dto.response.CreateVideoResponse;
 import com.fiap.fiapx.video.adapters.driver.api.dto.response.VideoResponse;
 import com.fiap.fiapx.video.adapters.driver.api.mapper.VideoApiMapper;
+import com.fiap.fiapx.video.adapters.driver.api.files.TempFileStorage;
 import com.fiap.fiapx.video.core.application.usecases.CreateVideoUseCase;
 import com.fiap.fiapx.video.core.application.usecases.FindVideoByIdUseCase;
 import com.fiap.fiapx.video.core.application.usecases.ListVideosByUserUseCase;
 import com.fiap.fiapx.video.core.application.usecases.command.CreateVideoCommand;
-import com.fiap.fiapx.video.core.domain.model.Video;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -26,24 +25,26 @@ public class VideoController {
     private final CreateVideoUseCase createVideoUseCase;
     private final FindVideoByIdUseCase findVideoByIdUseCase;
     private final ListVideosByUserUseCase listVideosByUserUseCase;
+    private final TempFileStorage tempFileStorage;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreateVideoResponse> create(
             @RequestHeader("X-User-Id") UUID userId,
-            @Valid @RequestBody CreateVideoRequest request
+            @RequestPart("file") MultipartFile file
     ) {
+        String storedPath = tempFileStorage.store(userId, file);
+
         CreateVideoCommand command = new CreateVideoCommand(
                 userId,
-                request.originalFilename(),
-                request.contentType(),
-                request.videoPath()
+                file.getOriginalFilename(),
+                file.getContentType(),
+                storedPath
         );
 
         createVideoUseCase.execute(command);
 
         return ResponseEntity.accepted().build();
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<VideoResponse> findById(@PathVariable("id") UUID id) {
         var video = findVideoByIdUseCase.execute(id);
