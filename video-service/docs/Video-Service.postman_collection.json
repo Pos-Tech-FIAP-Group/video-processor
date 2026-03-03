@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "Video Service - Video Processor",
+    "description": "Endpoints do Video Service direto (porta 8082).\n\n- Health: GET /api/videos/health (público).\n- List: GET /api/videos?userId=&page=&size= (UUID do usuário).\n- Get by Id: GET /api/videos/{id}.\n- Upload: POST /api/videos com header X-User-Id e form-data file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082" },
+    { "key": "videoUserId", "value": "", "description": "UUID do usuário (ex: do auth-service userUuid)" },
+    { "key": "videoId", "value": "", "description": "UUID do vídeo (preenchido ao listar ou após upload)" },
+    { "key": "videoFilePath", "value": "", "description": "Caminho do vídeo para Upload" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Video Service Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/videos/health",
+            "description": "Health check do video-service. Público."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "item": [
+        {
+          "name": "List Videos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videos?userId={{videoUserId}}&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos"],
+              "query": [
+                { "key": "userId", "value": "{{videoUserId}}" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Lista vídeos do usuário (paginação). Defina videoUserId (UUID)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.content && json.content.length > 0 && json.content[0].id) {",
+                  "    pm.collectionVariables.set('videoId', json.content[0].id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Video by Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/videos/{{videoId}}",
+            "description": "Busca vídeo por UUID. Defina a variável videoId (preenchida ao listar)."
+          }
+        },
+        {
+          "name": "Upload Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-User-Id", "value": "{{videoUserId}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "{{videoFilePath}}", "description": "Defina videoFilePath na collection ou escolha o arquivo manualmente." }
+              ]
+            },
+            "url": "{{baseUrl}}/api/videos",
+            "description": "Upload de vídeo (multipart). Header X-User-Id (UUID). Defina videoFilePath ou selecione o arquivo no body. 202 Accepted."
+          }
+        }
+      ]
+    }
+  ]
+}
