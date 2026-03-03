@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -49,8 +50,10 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
                 : doc.getRoles().stream()
                         .map(UserRole::valueOf)
                         .collect(Collectors.toSet());
+        UUID userUuid = doc.getUserUuid() != null ? UUID.fromString(doc.getUserUuid()) : null;
         return new User(
                 doc.getId(),
+                userUuid,
                 doc.getUsername(),
                 doc.getEmail(),
                 doc.getPasswordHash(),
@@ -63,6 +66,7 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     private UserDocument toDocument(User user) {
         UserDocument doc = new UserDocument();
         doc.setId(user.getId());
+        doc.setUserUuid(user.getUserUuid() != null ? user.getUserUuid().toString() : null);
         doc.setUsername(user.getUsername());
         doc.setEmail(user.getEmail());
         doc.setPasswordHash(user.getPasswordHash());

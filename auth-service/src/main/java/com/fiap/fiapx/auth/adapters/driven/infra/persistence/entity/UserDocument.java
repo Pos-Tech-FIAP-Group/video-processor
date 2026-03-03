@@ -15,6 +15,8 @@ public class UserDocument {
 
     @Id
     private String id;
+    /** UUID para uso em outros serviços (ex.: video-service). Gerado no registro. */
+    private String userUuid;
     @Indexed(unique = true)
     private String username;
     @Indexed(unique = true)
@@ -30,6 +32,14 @@ public class UserDocument {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUserUuid() {
+        return userUuid;
+    }
+
+    public void setUserUuid(String userUuid) {
+        this.userUuid = userUuid;
     }
 
     public String getUsername() {
