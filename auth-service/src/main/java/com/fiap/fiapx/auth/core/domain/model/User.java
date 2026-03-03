@@ -4,14 +4,17 @@ import com.fiap.fiapx.auth.core.domain.enums.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Entidade de domínio: usuário do sistema.
  * Sem anotações de framework (JPA/Mongo); usado apenas no core.
+ * userUuid: identificador externo (UUID) para uso em outros serviços (ex.: video-service).
  */
 public class User {
 
     private String id;
+    private UUID userUuid;
     private String username;
     private String email;
     private String passwordHash;
@@ -22,9 +25,10 @@ public class User {
     public User() {
     }
 
-    public User(String id, String username, String email, String passwordHash,
+    public User(String id, UUID userUuid, String username, String email, String passwordHash,
                 boolean enabled, LocalDateTime createdAt, Set<UserRole> roles) {
         this.id = id;
+        this.userUuid = userUuid;
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -39,6 +43,14 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public UUID getUserUuid() {
+        return userUuid;
+    }
+
+    public void setUserUuid(UUID userUuid) {
+        this.userUuid = userUuid;
     }
 
     public String getUsername() {

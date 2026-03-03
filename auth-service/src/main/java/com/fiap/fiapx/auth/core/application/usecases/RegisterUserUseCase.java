@@ -8,6 +8,7 @@ import com.fiap.fiapx.auth.core.domain.enums.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Caso de uso: registro de novo usuário. Criptografa senha, valida duplicidade e persiste.
@@ -33,6 +34,7 @@ public class RegisterUserUseCase {
         String passwordHash = passwordEncoder.encode(plainPassword);
         User user = new User(
                 null,
+                UUID.randomUUID(),
                 username,
                 email,
                 passwordHash,

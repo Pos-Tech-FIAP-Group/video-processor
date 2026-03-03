@@ -7,7 +7,8 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8081" },
     { "key": "token", "value": "" },
-    { "key": "userId", "value": "" }
+    { "key": "userId", "value": "" },
+    { "key": "videoUserId", "value": "" }
   ],
   "item": [
     {
@@ -23,7 +24,7 @@
               "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"postman@example.com\",\n  \"password\": \"senha123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/register",
-            "description": "Registra novo usuário. 201 + UserResponse. Salva userId para usar em Get User."
+            "description": "Registra novo usuário. 201 + UserResponse (id, userUuid, username, email, enabled). Salva userId e videoUserId (userUuid para video-service)."
           },
           "event": [
             {
@@ -33,6 +34,7 @@
                   "if (pm.response.code === 201) {",
                   "  const json = pm.response.json();",
                   "  if (json.id) pm.collectionVariables.set('userId', json.id);",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -104,8 +106,22 @@
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": "{{baseUrl}}/api/auth/users/{{userId}}",
-            "description": "Retorna usuário por id. Exige token. 200 + id, username, email, enabled. Use userId salvo no Register."
-          }
+            "description": "Retorna usuário por id. 200 + id, userUuid, username, email, enabled. Atualiza videoUserId se a resposta tiver userUuid."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

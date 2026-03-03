@@ -1,13 +1,16 @@
 {
   "info": {
     "name": "API Gateway - Video Processor",
-    "description": "Endpoints do Auth via API Gateway (porta 8080).\n\nRotas públicas: /api/auth/register, /api/auth/login, /api/auth/validate, /actuator/health.\nRotas protegidas (exigem header Authorization: Bearer <token>): /api/auth/users/{id}.",
+    "description": "Endpoints via API Gateway (porta 8080).\n\nAuth: públicas /api/auth/register, login, validate; protegidas /api/auth/users/{id}.\nVideos: pública /api/videos/health; protegidas /api/videos (GET lista, GET/{id}, POST upload).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
     { "key": "token", "value": "" },
-    { "key": "userId", "value": "" }
+    { "key": "userId", "value": "" },
+    { "key": "videoUserId", "value": "" },
+    { "key": "videoId", "value": "" },
+    { "key": "videoFilePath", "value": "", "description": "Caminho do vídeo para Upload" }
   ],
   "item": [
     {
@@ -23,7 +26,7 @@
               "raw": "{\n  \"username\": \"postman_user\",\n  \"email\": \"postman@example.com\",\n  \"password\": \"senha123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/register",
-            "description": "Registra novo usuário via gateway. 201 + UserResponse. Salva userId para usar em Get User."
+            "description": "Registra novo usuário via gateway. 201 + UserResponse (id, userUuid, username, email, enabled). Salva userId (Get User) e videoUserId (List Videos / Upload)."
           },
           "event": [
             {
@@ -33,6 +36,7 @@
                   "if (pm.response.code === 201) {",
                   "  const json = pm.response.json();",
                   "  if (json.id) pm.collectionVariables.set('userId', json.id);",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -99,8 +103,22 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/auth/users/{{userId}}",
-            "description": "Retorna usuário por id via gateway. Exige Authorization: Bearer <token>. 200 + id, username, email, enabled. Use userId salvo no Register."
-          }
+            "description": "Retorna usuário por id. 200 + id, userUuid, username, email, enabled. Atualiza videoUserId se a resposta tiver userUuid (para List Videos / Upload)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -139,6 +157,64 @@
             "method": "GET",
             "url": "{{baseUrl}}/api/auth/users/{{userId}}",
             "description": "Sem header Authorization. Esperado 401 (gateway)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Videos",
+      "item": [
+        {
+          "name": "Video Service Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/videos/health",
+            "description": "Health check do video-service. Rota pública, não exige token."
+          }
+        },
+        {
+          "name": "List Videos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/videos?userId={{videoUserId}}&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "videos"],
+              "query": [
+                { "key": "userId", "value": "{{videoUserId}}" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Lista vídeos do usuário (paginação). Exige token. Variável videoUserId deve ser um UUID."
+          }
+        },
+        {
+          "name": "Get Video by Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/videos/{{videoId}}",
+            "description": "Busca vídeo por UUID. Exige token. Defina a variável videoId com o id retornado ao listar ou criar."
+          }
+        },
+        {
+          "name": "Upload Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "X-User-Id", "value": "{{videoUserId}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "{{videoFilePath}}", "description": "Defina a variável videoFilePath na collection ou escolha o arquivo manualmente." }
+              ]
+            },
+            "url": "{{baseUrl}}/api/videos",
+            "description": "Upload de vídeo (multipart). Exige token e header X-User-Id (UUID). Defina a variável de collection 'videoFilePath' com o caminho do vídeo ou selecione o arquivo no body. 202 Accepted."
           }
         }
       ]

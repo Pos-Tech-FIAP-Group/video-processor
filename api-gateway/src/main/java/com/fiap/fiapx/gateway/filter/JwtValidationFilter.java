@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * Filtro que valida JWT em rotas protegidas chamando o Auth Service GET /api/auth/validate.
- * Rotas públicas (/api/auth/register, /api/auth/login, /api/auth/validate) não passam pela validação.
+ * Rotas públicas: /api/auth/register, login, validate; /api/videos/health; /actuator/**.
  */
 @Component
 public class JwtValidationFilter implements GlobalFilter, Ordered {
@@ -38,6 +38,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/validate",
+            "/api/videos/health",
             "/actuator/"
     );
 

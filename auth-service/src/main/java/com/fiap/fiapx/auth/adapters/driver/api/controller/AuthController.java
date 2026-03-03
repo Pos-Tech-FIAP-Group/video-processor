@@ -68,6 +68,7 @@ public class AuthController {
     private UserResponse toUserResponse(User user) {
         return new UserResponse(
                 user.getId(),
+                user.getUserUuid() != null ? user.getUserUuid().toString() : null,
                 user.getUsername(),
                 user.getEmail(),
                 user.isEnabled()

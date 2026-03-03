@@ -23,6 +23,30 @@ services:
       mongodb:
         condition: service_healthy
 
+  video-service:
+    build:
+      context: .
+      dockerfile: video-service/Dockerfile
+    container_name: video-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-video:5432/video_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_VIDEO_USER:-video_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_VIDEO_PASSWORD:-video_pass}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+      APP_STORAGE_TEMP_DIR: /shared/videos
+    volumes:
+      - ./tmp/videos:/shared/videos
+    depends_on:
+      postgres-video:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+        
   processing-service:
     build:
       context: .
@@ -30,13 +54,7 @@ services:
     #    image: video-processor/processing-service:latest
     container_name: processing-service
     ports:
-      - "8082:8082"
-
-  video-service:
-    volumes:
-      - ./tmp/videos:/shared/videos
-    environment:
-      APP_STORAGE_TEMP_DIR: /shared/videos
+      - "8083:8083"
 
   # --- Infrastructure Services ---
   rabbitmq:
@@ -117,3 +135,4 @@ volumes:
   mongodb_data:
   postgres_video_data:
   rabbitmq_data:
+  redis_data:
