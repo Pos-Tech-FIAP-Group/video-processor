@@ -13,7 +13,7 @@ import java.nio.file.Path;
 /**
  * Use case principal para processamento de vídeo.
  * Recebe requisição, valida parâmetros, processa e publica evento na fila
- * video_processing_completed_queue (sucesso) ou evento de falha.
+ * video.processing.completed.processing-service (sucesso) ou evento de falha.
  * Não persiste estado localmente.
  */
 @Component
