@@ -25,7 +25,7 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.processing.queue:video.processing.queue}")
     private String processingQueue;
     
-    @Value("${spring.rabbitmq.processing.routing-key:video.processing.request}")
+    @Value("${spring.rabbitmq.processing.routing-key:video.processing.requested}")
     private String processingRoutingKey;
     
     // Exchange e Queues de eventos (resultados)

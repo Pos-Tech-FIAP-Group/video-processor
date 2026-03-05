@@ -21,7 +21,7 @@ spring:
     processing:
       exchange: video.processing.exchange
       queue: video.processing.queue
-      routing-key: video.processing.request
+      routing-key: video.processing.requested
     
     # Events: processing-service publica conclusão na fila consumida pelo video-service
     events:
