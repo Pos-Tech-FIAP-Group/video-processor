@@ -1,11 +1,12 @@
 package com.fiap.fiapx.video.core.application.usecases;
 
 import com.fiap.fiapx.video.core.application.exceptions.VideoNotFoundException;
+import com.fiap.fiapx.video.core.application.ports.VideoProcessingMetricsPort;
 import com.fiap.fiapx.video.core.application.ports.VideoRepositoryPort;
-import com.fiap.fiapx.video.core.application.usecases.UpdateVideoProcessingResultUseCase;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -13,6 +14,7 @@ import java.util.UUID;
 public class UpdateVideoProcessingResultUseCaseImpl implements UpdateVideoProcessingResultUseCase {
 
     private final VideoRepositoryPort videoRepositoryPort;
+    private final VideoProcessingMetricsPort metricsPort;
 
 
     @Override
@@ -22,6 +24,13 @@ public class UpdateVideoProcessingResultUseCaseImpl implements UpdateVideoProces
 
         var processed = video.completeProcessing(frameCount, zipPath);
         videoRepositoryPort.save(processed);
+
+        metricsPort.incrementSuccess();
+
+        if (video.getCreatedAt() != null && processed.getProcessedAt() != null) {
+            var duration = Duration.between(video.getCreatedAt(), processed.getProcessedAt());
+            metricsPort.recordProcessingDuration(duration);
+        }
     }
 
     @Override
@@ -31,5 +40,7 @@ public class UpdateVideoProcessingResultUseCaseImpl implements UpdateVideoProces
 
         var failed = video.failProcessing(errorMessage);
         videoRepositoryPort.save(failed);
+
+        metricsPort.incrementFailure();
     }
 }

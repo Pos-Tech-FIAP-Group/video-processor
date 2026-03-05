@@ -10,6 +10,8 @@ import com.fiap.fiapx.video.core.application.usecases.FindVideoByIdUseCase;
 import com.fiap.fiapx.video.core.application.usecases.ListVideosByUserUseCase;
 import com.fiap.fiapx.video.core.application.usecases.command.CreateVideoCommand;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,8 @@ import java.util.UUID;
 @RequestMapping("/api/videos")
 public class VideoController {
 
+    private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
+
     private final CreateVideoUseCase createVideoUseCase;
     private final FindVideoByIdUseCase findVideoByIdUseCase;
     private final ListVideosByUserUseCase listVideosByUserUseCase;
@@ -32,6 +36,8 @@ public class VideoController {
             @RequestHeader("X-User-Id") UUID userId,
             @RequestPart("file") MultipartFile file
     ) {
+        logger.info("video_upload_request userId={} filename={} contentType={}", userId, file.getOriginalFilename(), file.getContentType());
+
         String storedPath = tempFileStorage.store(userId, file);
 
         CreateVideoCommand command = new CreateVideoCommand(
@@ -42,6 +48,8 @@ public class VideoController {
         );
 
         createVideoUseCase.execute(command);
+
+        logger.info("video_upload_accepted userId={} storedPath={}", userId, storedPath);
 
         return ResponseEntity.accepted().build();
     }
