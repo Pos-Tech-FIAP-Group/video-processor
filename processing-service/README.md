@@ -1,6 +1,6 @@
 # Processing Service
 
-Microsserviço responsável por **processar vídeos** (extração de frames) no sistema Video Processor FIAP X. Não persiste dados: consome mensagens da fila, processa com FFmpeg e publica o resultado na fila `video_processing_completed_queue` para o **video-service** consumir.
+Microsserviço responsável por **processar vídeos** (extração de frames) no sistema Video Processor FIAP X. Não persiste dados: consome mensagens da fila, processa com FFmpeg e publica o resultado na fila `video.processing.completed.processing-service` para o **video-service** consumir.
 
 ## Arquitetura
 
@@ -17,19 +17,19 @@ Microsserviço responsável por **processar vídeos** (extração de frames) no 
    - Detecta o formato do vídeo (extensão ou FFprobe).
    - Escolhe a strategy por formato e executa extração de frames (FFmpeg) e geração do ZIP.
 3. **Saída**:
-   - **Sucesso**: publica mensagem na fila **`video_processing_completed_queue`** (exchange `video.processing.events.exchange`, routing key `video.processing.completed`) com `videoId`, `resultLocation`, `frameIntervalSeconds`, `processedAt`. O **video-service** deve consumir essa fila para atualizar status e `zipPath` do vídeo.
-   - **Falha**: publica mensagem na fila **`video_processing_failed_queue`** (routing key `video.processing.failed`) com `videoId`, `errorMessage`, `failedAt` para notificação/retry.
+   - **Sucesso**: publica mensagem na fila **`video.processing.completed.processing-service`** (exchange `video.processing.events.exchange`, routing key `video.processing.completed`) com `videoId`, `resultLocation`, `frameIntervalSeconds`, `processedAt`. O **video-service** deve consumir essa fila para atualizar status e `zipPath` do vídeo.
+   - **Falha**: publica mensagem na fila **`video.processing.failed.processing-service`** (routing key `video.processing.failed`) com `videoId`, `errorMessage`, `failedAt` para notificação/retry.
 
 ## Filas RabbitMQ
 
 | Fila / Exchange | Uso |
 |-----------------|-----|
 | `video.processing.exchange` + `video.processing.queue` | Entrada: requisições de processamento (consumidas por este serviço). |
-| `video.processing.events.exchange` + **`video_processing_completed_queue`** | Saída: processamento concluído (consumida pelo **video-service**). |
-| `video.processing.events.exchange` + `video_processing_failed_queue` | Saída: processamento com erro (consumida pelo **notification-service** ou video-service). |
+| `video.processing.events.exchange` + **`video.processing.completed.processing-service`** | Saída: processamento concluído (consumida pelo **video-service**). |
+| `video.processing.events.exchange` + `video.processing.failed.processing-service` | Saída: processamento com erro (consumida pelo **notification-service** ou video-service). |
 | `video.processing.dlq` | Dead letter para mensagens que falharam após retries. |
 
-## Formato da mensagem de conclusão (video_processing_completed_queue)
+## Formato da mensagem de conclusão (video.processing.completed.processing-service)
 
 O payload publicado na fila de conclusão segue o formato esperado pelo video-service (JSON), por exemplo:
 
@@ -43,7 +43,7 @@ O payload publicado na fila de conclusão segue o formato esperado pelo video-se
 }
 ```
 
-O **video-service** deve consumir `video_processing_completed_queue`, atualizar o vídeo correspondente (ex.: status CONCLUIDO, `zipPath` = `resultLocation`) e permitir download do ZIP.
+O **video-service** deve consumir `video.processing.completed.processing-service`, atualizar o vídeo correspondente (ex.: status CONCLUIDO, `zipPath` = `resultLocation`) e permitir download do ZIP.
 
 ## Pré-requisitos
 
@@ -121,7 +121,7 @@ curl -X POST http://localhost:8082/api/process/extract-frames \
 
 - O **video-service** persiste os vídeos (ex.: PostgreSQL), controla status (PENDENTE, PROCESSANDO, CONCLUIDO, ERRO) e expõe API para listar e fazer download.
 - Para disparar o processamento, o video-service (ou outro serviço) deve **publicar** uma mensagem na exchange/fila de entrada do processing-service (ex.: `video.processing.exchange` + routing key `video.processing.request`), com payload contendo pelo menos: `videoId`, `inputLocation`, `frameIntervalSeconds`, `userId`, e opcionalmente `format`.
-- Ao concluir, o processing-service publica na **`video_processing_completed_queue`**. O video-service deve ter um **consumer** dessa fila para atualizar o vídeo (status CONCLUIDO, `zipPath` = `resultLocation`) e, se aplicável, mover/copiar o ZIP para o storage definitivo.
+- Ao concluir, o processing-service publica na **`video.processing.completed.processing-service`**. O video-service deve ter um **consumer** dessa fila para atualizar o vídeo (status CONCLUIDO, `zipPath` = `resultLocation`) e, se aplicável, mover/copiar o ZIP para o storage definitivo.
 
 ## Estrutura do serviço (resumo)
 

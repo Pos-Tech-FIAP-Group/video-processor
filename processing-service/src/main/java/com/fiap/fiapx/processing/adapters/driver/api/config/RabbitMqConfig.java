@@ -32,10 +32,10 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.events.exchange:video.processing.events.exchange}")
     private String eventsExchange;
     
-    @Value("${spring.rabbitmq.events.queue.completed:video_processing_completed_queue}")
+    @Value("${spring.rabbitmq.events.queue.completed:video.processing.completed.processing-service}")
     private String completedQueue;
     
-    @Value("${spring.rabbitmq.events.queue.failed:video_processing_failed_queue}")
+    @Value("${spring.rabbitmq.events.queue.failed:video.processing.failed.processing-service}")
     private String failedQueue;
     
     @Value("${spring.rabbitmq.events.routing-key.completed:video.processing.completed}")
