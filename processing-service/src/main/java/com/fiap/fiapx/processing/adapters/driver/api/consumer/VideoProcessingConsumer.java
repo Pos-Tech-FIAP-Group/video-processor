@@ -51,7 +51,7 @@ public class VideoProcessingConsumer {
         
         try {
             logger.info("Received video processing message for videoId: {}, frameInterval: {}", 
-                videoId, message.frameIntervalSeconds());
+                videoId, message.effectiveFrameIntervalSeconds());
             
             // Converte DTO da mensagem para modelo de domínio
             VideoProcessingRequest request = toVideoProcessingRequest(message);
@@ -80,7 +80,7 @@ public class VideoProcessingConsumer {
         return new VideoProcessingRequest(
             message.videoId(),
             inputPath,
-            message.frameIntervalSeconds(),
+            message.effectiveFrameIntervalSeconds(),
             message.format(),
             message.userId() != null ? message.userId() : "system"
         );
