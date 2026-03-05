@@ -7,12 +7,12 @@ public interface ProcessingEventPublisherPort {
     
     /**
      * Publica evento de processamento concluído com sucesso.
-     * 
+     *
      * @param videoId ID do vídeo processado
-     * @param resultLocation localização/URI do arquivo zip gerado
-     * @param frameIntervalSeconds intervalo entre frames usado
+     * @param resultLocation localização/URI do arquivo zip gerado (zipPath para o video-service)
+     * @param frameCount quantidade de frames extraídos
      */
-    void publishProcessingCompleted(String videoId, String resultLocation, double frameIntervalSeconds);
+    void publishProcessingCompleted(String videoId, String resultLocation, long frameCount);
     
     /**
      * Publica evento de falha no processamento.

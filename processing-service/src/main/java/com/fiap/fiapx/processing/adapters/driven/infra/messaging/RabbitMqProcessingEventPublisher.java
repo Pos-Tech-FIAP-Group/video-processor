@@ -32,60 +32,52 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
     }
     
     @Override
-    public void publishProcessingCompleted(String videoId, String resultLocation, double frameIntervalSeconds) {
+    public void publishProcessingCompleted(String videoId, String resultLocation, long frameCount) {
         try {
-            ProcessingCompletedEvent event = new ProcessingCompletedEvent(
+            // Formato esperado pelo video-service: VideoProcessingCompletedMessage(videoId, success, frameCount, zipPath, errorMessage)
+            var payload = new VideoProcessingCompletedPayload(
                 videoId,
-                "COMPLETED",
+                true,
+                (int) frameCount,
                 resultLocation,
-                frameIntervalSeconds,
-                java.time.LocalDateTime.now()
+                null
             );
-            
-            rabbitTemplate.convertAndSend(eventsExchange, completedRoutingKey, event);
-            logger.info("Published processing completed event for videoId: {}", videoId);
+            rabbitTemplate.convertAndSend(eventsExchange, completedRoutingKey, payload);
+            logger.info("Published processing completed event for videoId: {}, frameCount: {}", videoId, frameCount);
         } catch (Exception e) {
             logger.error("Failed to publish processing completed event for videoId: {}", videoId, e);
             throw new RuntimeException("Failed to publish event", e);
         }
     }
-    
+
     @Override
     public void publishProcessingFailed(String videoId, String errorMessage) {
         try {
-            ProcessingFailedEvent event = new ProcessingFailedEvent(
+            // Mesmo formato do completed para o video-service consumir com executeFailure
+            var payload = new VideoProcessingCompletedPayload(
                 videoId,
-                "FAILED",
-                errorMessage,
-                java.time.LocalDateTime.now()
+                false,
+                null,
+                null,
+                errorMessage != null ? errorMessage : "Erro desconhecido"
             );
-            
-            rabbitTemplate.convertAndSend(eventsExchange, failedRoutingKey, event);
+            // Envia na mesma routing key do completed para o video-service consumir na mesma fila e chamar executeFailure
+            rabbitTemplate.convertAndSend(eventsExchange, completedRoutingKey, payload);
             logger.info("Published processing failed event for videoId: {}", videoId);
         } catch (Exception e) {
             logger.error("Failed to publish processing failed event for videoId: {}", videoId, e);
             throw new RuntimeException("Failed to publish event", e);
         }
     }
-    
+
     /**
-     * DTO interno para evento de processamento concluído.
+     * Payload compatível com VideoProcessingCompletedMessage do video-service (videoId, success, frameCount, zipPath, errorMessage).
      */
-    public record ProcessingCompletedEvent(
+    public record VideoProcessingCompletedPayload(
         String videoId,
-        String status,
-        String resultLocation,
-        double frameIntervalSeconds,
-        java.time.LocalDateTime processedAt
-    ) {}
-    
-    /**
-     * DTO interno para evento de falha no processamento.
-     */
-    public record ProcessingFailedEvent(
-        String videoId,
-        String status,
-        String errorMessage,
-        java.time.LocalDateTime failedAt
+        boolean success,
+        Integer frameCount,
+        String zipPath,
+        String errorMessage
     ) {}
 }

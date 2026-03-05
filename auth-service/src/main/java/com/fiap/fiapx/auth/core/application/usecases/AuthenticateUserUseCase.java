@@ -39,6 +39,7 @@ public class AuthenticateUserUseCase {
         }
 
         String token = tokenProvider.generateToken(user);
-        return new AuthResult(token, user.getUsername(), expiresInMs);
+        String userUuid = user.getUserUuid() != null ? user.getUserUuid().toString() : null;
+        return new AuthResult(token, user.getUsername(), expiresInMs, user.getId(), userUuid);
     }
 }
