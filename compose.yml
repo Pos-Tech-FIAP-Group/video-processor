@@ -55,8 +55,17 @@ services:
     container_name: processing-service
     ports:
       - "8083:8083"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+      PROCESSING_STORAGE_BASE_PATH: /shared/videos
     volumes:
       - ./tmp/videos:/shared/videos
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   # --- Infrastructure Services ---
   rabbitmq:

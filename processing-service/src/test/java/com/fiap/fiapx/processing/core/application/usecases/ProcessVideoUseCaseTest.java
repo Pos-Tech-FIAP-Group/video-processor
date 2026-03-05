@@ -72,7 +72,7 @@ class ProcessVideoUseCaseTest {
         assertDoesNotThrow(() -> processVideoUseCase.execute(request));
 
         verify(videoMetadataPort).getDuration(videoPath);
-        verify(eventPublisherPort).publishProcessingCompleted("video-123", "/tmp/result.zip", 1.0);
+        verify(eventPublisherPort).publishProcessingCompleted("video-123", "/tmp/result.zip", 10L);
     }
 
     @Test

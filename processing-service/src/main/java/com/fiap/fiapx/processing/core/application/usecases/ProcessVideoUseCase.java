@@ -55,7 +55,7 @@ public class ProcessVideoUseCase {
             eventPublisherPort.publishProcessingCompleted(
                     videoId,
                     result.resultLocation(),
-                    request.frameIntervalSeconds()
+                    result.frameCount()
             );
 
             logger.info("Video processing completed successfully for videoId: {}", videoId);

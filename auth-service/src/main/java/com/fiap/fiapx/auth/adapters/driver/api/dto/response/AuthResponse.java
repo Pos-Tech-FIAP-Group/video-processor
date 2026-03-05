@@ -7,9 +7,11 @@ public record AuthResponse(
         String token,
         String type,
         long expiresIn,
-        String username
+        String username,
+        String userId,
+        String userUuid
 ) {
-    public static AuthResponse of(String token, long expiresInMs, String username) {
-        return new AuthResponse(token, "Bearer", expiresInMs, username);
+    public static AuthResponse of(String token, long expiresInMs, String username, String userId, String userUuid) {
+        return new AuthResponse(token, "Bearer", expiresInMs, username, userId, userUuid);
     }
 }

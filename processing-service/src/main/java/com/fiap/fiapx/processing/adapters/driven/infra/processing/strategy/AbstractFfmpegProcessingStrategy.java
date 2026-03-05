@@ -16,35 +16,40 @@ import java.util.zip.ZipOutputStream;
 /**
  * Classe base abstrata para strategies de processamento usando FFmpeg.
  * Contém a lógica comum de extração de frames e criação de zip.
+ * O zip é salvo em {zipsDirectory}/{videoId}.zip para persistência no volume compartilhado.
  */
 public abstract class AbstractFfmpegProcessingStrategy implements VideoProcessingStrategyPort {
-    
+
     private static final String FRAME_PATTERN = "frame_%04d.png";
-    
+
+    private final Path zipsDirectory;
+
+    protected AbstractFfmpegProcessingStrategy(Path zipsDirectory) {
+        this.zipsDirectory = zipsDirectory;
+    }
+
     @Override
     public ProcessingResult processVideo(VideoProcessingRequest request) {
         Path videoPath = request.inputPath();
-        
+
         if (!Files.isRegularFile(videoPath)) {
             throw new IllegalArgumentException("Video path must point to an existing file: " + videoPath);
         }
-        
+
         Path tempDir = null;
         try {
             tempDir = Files.createTempDirectory("video-frames-");
-            Path framesOutput = tempDir.resolve(FRAME_PATTERN);
-            
+
             extractFramesWithFfmpeg(videoPath, tempDir, request.frameIntervalSeconds());
-            
+
             long frameCount = countFrames(tempDir);
-            
-            // Cria zip temporário
-            Path zipPath = Files.createTempFile("video-frames-", ".zip");
+
+            Files.createDirectories(zipsDirectory);
+            Path zipPath = zipsDirectory.resolve(request.videoId() + ".zip");
             zipFrames(tempDir, zipPath);
-            
-            // Gera localização do resultado (URI ou path relativo)
+
             String resultLocation = generateResultLocation(request.videoId(), zipPath);
-            
+
             return new ProcessingResult(zipPath, frameCount, resultLocation);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process video: " + videoPath, e);

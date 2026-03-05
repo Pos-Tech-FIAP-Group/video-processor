@@ -47,7 +47,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         var result = authenticateUserUseCase.execute(request.username(), request.password());
-        AuthResponse response = AuthResponse.of(result.token(), result.expiresInMs(), result.username());
+        AuthResponse response = AuthResponse.of(result.token(), result.expiresInMs(), result.username(), result.userId(), result.userUuid());
         return ResponseEntity.ok(response);
     }
 
