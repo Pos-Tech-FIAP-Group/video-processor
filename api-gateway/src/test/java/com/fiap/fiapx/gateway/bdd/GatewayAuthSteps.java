@@ -1,8 +1,8 @@
 package com.fiap.fiapx.gateway.bdd;
 
-import io.cucumber.java.pt.E;
-import io.cucumber.java.pt.Então;
-import io.cucumber.java.pt.Quando;
+import io.cucumber.java.en.And;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -16,8 +16,8 @@ public class GatewayAuthSteps {
 
     private EntityExchangeResult<byte[]> lastResponse;
 
-    @Quando("eu faço um GET em {string} sem header Authorization")
-    public void quando_get_sem_authorization(String path) {
+    @When("I send a GET to {string} without Authorization header")
+    public void whenGetWithoutAuthorization(String path) {
         lastResponse = webTestClient.get()
                 .uri(path)
                 .exchange()
@@ -25,14 +25,14 @@ public class GatewayAuthSteps {
                 .returnResult();
     }
 
-    @Então("o status da resposta é 401")
-    public void entao_status_401() {
+    @Then("the response status is 401")
+    public void thenStatusIs401() {
         assertThat(lastResponse.getStatus().value()).isEqualTo(401);
     }
 
-    @E("o corpo contém {string}")
-    public void e_corpo_contem(String texto) {
+    @And("the body contains {string}")
+    public void andBodyContains(String text) {
         String body = new String(lastResponse.getResponseBody());
-        assertThat(body).contains(texto);
+        assertThat(body).contains(text);
     }
 }
