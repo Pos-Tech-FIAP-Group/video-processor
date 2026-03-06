@@ -1,0 +1,8 @@
+# Perfil de teste: MongoDB é configurado via Testcontainers nos testes de integração
+# (@DynamicPropertySource ou @ServiceConnection no teste).
+
+spring:
+  data:
+    mongodb:
+      # URI injetada pelos testes (MongoDBContainer)
+      database: auth_test
