@@ -8,9 +8,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'videos', pathMatch: 'full' },
-      { path: 'videos', loadComponent: () => import('./features/videos/video-list/video-list.component').then(m => m.VideoListComponent) },
-      { path: 'videos/upload', loadComponent: () => import('./features/videos/video-upload/video-upload.component').then(m => m.VideoUploadComponent) },
-      { path: 'videos/:id', loadComponent: () => import('./features/videos/video-detail/video-detail.component').then(m => m.VideoDetailComponent) },
+      {
+        path: 'videos',
+        loadComponent: () => import('./features/videos/videos-layout/videos-layout.component').then(m => m.VideosLayoutComponent),
+        children: [
+          { path: '', loadComponent: () => import('./features/videos/video-list/video-list.component').then(m => m.VideoListComponent) },
+          { path: 'upload', loadComponent: () => import('./features/videos/video-upload/video-upload.component').then(m => m.VideoUploadComponent) },
+          { path: ':id', loadComponent: () => import('./features/videos/video-list/video-list.component').then(m => m.VideoListComponent) },
+        ],
+      },
     ],
   },
   { path: '**', redirectTo: '' },

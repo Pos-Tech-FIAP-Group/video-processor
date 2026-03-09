@@ -37,7 +37,8 @@ public class VideoController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreateVideoResponse> create(
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestPart("file") MultipartFile file
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(name = "frameIntervalSeconds", required = false) Double frameIntervalSeconds
     ) {
         String storedPath = tempFileStorage.store(userId, file);
 
@@ -45,12 +46,12 @@ public class VideoController {
                 userId,
                 file.getOriginalFilename(),
                 file.getContentType(),
-                storedPath
+                storedPath,
+                frameIntervalSeconds
         );
 
-        createVideoUseCase.execute(command);
-
-        return ResponseEntity.accepted().build();
+        Video video = createVideoUseCase.execute(command);
+        return ResponseEntity.accepted().body(VideoApiMapper.toCreateResponse(video));
     }
     @GetMapping("/{id}")
     public ResponseEntity<VideoResponse> findById(@PathVariable("id") UUID id) {
