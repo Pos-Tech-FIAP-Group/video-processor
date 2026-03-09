@@ -6,6 +6,7 @@ public record CreateVideoCommand(
         UUID userId,
         String originalFilename,
         String contentType,
-        String videoPath
+        String videoPath,
+        Double frameIntervalSeconds
 ) {
 }

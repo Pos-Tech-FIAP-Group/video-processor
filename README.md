@@ -20,6 +20,7 @@ Serviços disponíveis:
 
 | Serviço      | Porta | URL base              |
 |-------------|-------|------------------------|
+| Web App (UI)| 4200  | http://localhost:4200  |
 | API Gateway | 8080  | http://localhost:8080  |
 | Auth Service| 8081  | http://localhost:8081  |
 | MongoDB     | 27017 | (interno ao auth)     |
