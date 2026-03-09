@@ -67,6 +67,16 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  web-app:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    container_name: web-app
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+
   # --- Infrastructure Services ---
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
