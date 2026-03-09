@@ -5,6 +5,9 @@ server:
 processing:
   storage:
     base-path: ${PROCESSING_STORAGE_BASE_PATH:/data}
+    s3:
+      bucket: ${PROCESSING_STORAGE_S3_BUCKET:}
+      region: ${AWS_REGION:}
 
 spring:
   application:
