@@ -18,14 +18,30 @@ docker compose up -d
 
 Serviços disponíveis:
 
-| Serviço      | Porta | URL base              |
-|-------------|-------|------------------------|
-| Web App (UI)| 4200  | http://localhost:4200  |
-| API Gateway | 8080  | http://localhost:8080  |
-| Auth Service| 8081  | http://localhost:8081  |
-| MongoDB     | 27017 | (interno ao auth)     |
+| Serviço            | Porta | URL base              |
+|--------------------|-------|------------------------|
+| Web App (UI)       | 4200  | http://localhost:4200  |
+| API Gateway        | 8080  | http://localhost:8080  |
+| Auth Service       | 8081  | http://localhost:8081  |
+| Video Service      | 8082  | (via gateway)          |
+| Processing Service | 8083  | (interno)              |
+| RabbitMQ            | 5672 / 15672 | (interno / management) |
+| MongoDB             | 27017 | (interno ao auth)      |
 
-Todas as chamadas do cliente devem ir pelo **gateway** (8080). O gateway encaminha `/api/auth/**` para o auth-service e `/api/videos/**` para o video-service (quando estiver no compose). Processing e notification são serviços internos, chamados por outros microsserviços — não possuem rota no gateway.
+Todas as chamadas do cliente devem ir pelo **gateway** (8080). O gateway encaminha `/api/auth/**` para o auth-service e `/api/videos/**` para o video-service. Processing e notification são serviços internos, chamados por outros microsserviços — não possuem rota no gateway.
+
+### Variáveis de ambiente (Docker Compose)
+
+O `compose.yml` lê variáveis do ambiente ou de um arquivo `.env` na raiz. Para o **processing-service** enviar os zips de frames para o **S3** (em vez de só guardar em disco), defina:
+
+| Variável | Descrição |
+|----------|-----------|
+| `AWS_ACCESS_KEY_ID` | Access key do usuário IAM com permissão de escrita no bucket |
+| `AWS_SECRET_ACCESS_KEY` | Secret da access key |
+| `AWS_REGION` | Região do bucket (ex.: `sa-east-1`) |
+| `PROCESSING_STORAGE_S3_BUCKET` | Nome do bucket (ex.: `video-processor-zip-artifacts`) |
+
+Se essas variáveis não forem definidas, o processing-service continua funcionando: o zip é gerado em disco e o caminho local é publicado na fila (o video-service e a UI podem usar o endpoint de download do backend). Com S3 configurado, o zip é enviado ao bucket (organizado por user UUID: `{userUuid}/{videoId}.zip`), a URL pública é publicada na fila e a UI pode baixar direto pelo link. Detalhes da configuração do bucket (leitura pública, escrita restrita) e do fluxo estão em [processing-service/README.md](processing-service/README.md#armazenamento-s3-opcional).
 
 ## Microsserviços
 
@@ -64,10 +80,7 @@ Todas as chamadas do cliente devem ir pelo **gateway** (8080). O gateway encamin
 - **Configuração:** Um único `application.yml` para Docker (MongoDB pelo nome do serviço). Sem perfil local.
 - **Postman:** [auth-service/docs/Auth-Service.postman_collection.json](./auth-service/docs/Auth-Service.postman_collection.json) — testes diretos no auth-service (porta 8081). Para testar pelo gateway, use a collection do API Gateway.
 
-# Video Service (FIAP X)
+### Video Service e Processing Service
 
-Monorepo do sistema de processamento de vídeos (microsserviços).
-
-## Como rodar (Video Service)
-
-Veja instruções em `video-service/README.md`.
+- **Video Service:** ver `video-service/README.md` (upload de vídeo, listagem, download do ZIP, consumo da fila de processamento concluído).
+- **Processing Service:** ver `processing-service/README.md` (processamento com FFmpeg, upload opcional para S3, filas RabbitMQ).

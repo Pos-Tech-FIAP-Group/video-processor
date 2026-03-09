@@ -61,6 +61,11 @@ services:
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
       PROCESSING_STORAGE_BASE_PATH: /shared/videos
+      # S3 (opcional: se não definir, o zip continua só em disco e o path local é publicado)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_REGION: ${AWS_REGION:-}
+      PROCESSING_STORAGE_S3_BUCKET: ${PROCESSING_STORAGE_S3_BUCKET:-}
     volumes:
       - ./tmp/videos:/shared/videos
     depends_on:

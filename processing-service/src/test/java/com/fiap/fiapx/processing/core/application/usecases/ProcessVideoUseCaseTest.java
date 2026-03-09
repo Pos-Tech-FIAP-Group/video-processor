@@ -14,9 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +38,9 @@ class ProcessVideoUseCaseTest {
 
     @Mock
     private ProcessingEventPublisherPort eventPublisherPort;
+
+    @Mock
+    private ZipStorageUploadPort zipStorageUploadPort;
 
     @InjectMocks
     private ProcessVideoUseCase processVideoUseCase;
@@ -68,11 +73,32 @@ class ProcessVideoUseCaseTest {
         when(formatDetectorPort.detectFormat(videoPath)).thenReturn(VideoFormat.MP4);
         when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
         when(strategyPort.processVideo(any())).thenReturn(result);
+        when(zipStorageUploadPort.uploadAndGetPublicUrl(any(), any(), any())).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> processVideoUseCase.execute(request));
 
         verify(videoMetadataPort).getDuration(videoPath);
+        verify(zipStorageUploadPort).uploadAndGetPublicUrl(eq(Paths.get("/tmp/result.zip")), eq("user-456"), eq("video-123"));
         verify(eventPublisherPort).publishProcessingCompleted("video-123", "/tmp/result.zip", 10L);
+    }
+
+    @Test
+    void shouldPublishS3UrlWhenUploadReturnsUrl() {
+        VideoDuration duration = new VideoDuration(10.0);
+        Path zipPath = Paths.get("/tmp/result.zip");
+        ProcessingResult result = new ProcessingResult(zipPath, 10L, "/tmp/result.zip");
+        String s3Url = "https://my-bucket.s3.sa-east-1.amazonaws.com/user-456/video-123.zip";
+
+        when(videoMetadataPort.getDuration(videoPath)).thenReturn(duration);
+        when(formatDetectorPort.detectFormat(videoPath)).thenReturn(VideoFormat.MP4);
+        when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
+        when(strategyPort.processVideo(any())).thenReturn(result);
+        when(zipStorageUploadPort.uploadAndGetPublicUrl(eq(zipPath), eq("user-456"), eq("video-123")))
+                .thenReturn(Optional.of(s3Url));
+
+        assertDoesNotThrow(() -> processVideoUseCase.execute(request));
+
+        verify(eventPublisherPort).publishProcessingCompleted("video-123", s3Url, 10L);
     }
 
     @Test

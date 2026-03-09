@@ -25,16 +25,19 @@ public class ProcessVideoUseCase {
     private final VideoFormatDetectorPort formatDetectorPort;
     private final VideoProcessingStrategyResolverPort strategyResolver;
     private final ProcessingEventPublisherPort eventPublisherPort;
+    private final ZipStorageUploadPort zipStorageUploadPort;
 
     public ProcessVideoUseCase(
             VideoMetadataPort videoMetadataPort,
             VideoFormatDetectorPort formatDetectorPort,
             VideoProcessingStrategyResolverPort strategyResolver,
-            ProcessingEventPublisherPort eventPublisherPort) {
+            ProcessingEventPublisherPort eventPublisherPort,
+            ZipStorageUploadPort zipStorageUploadPort) {
         this.videoMetadataPort = videoMetadataPort;
         this.formatDetectorPort = formatDetectorPort;
         this.strategyResolver = strategyResolver;
         this.eventPublisherPort = eventPublisherPort;
+        this.zipStorageUploadPort = zipStorageUploadPort;
     }
 
     /**
@@ -52,9 +55,13 @@ public class ProcessVideoUseCase {
             VideoProcessingRequest requestWithFormat = detectAndSetFormat(request);
             ProcessingResult result = processVideoWithStrategy(requestWithFormat);
 
+            String resultLocation = zipStorageUploadPort
+                    .uploadAndGetPublicUrl(result.zipPath(), request.userId(), videoId)
+                    .orElse(result.resultLocation());
+
             eventPublisherPort.publishProcessingCompleted(
                     videoId,
-                    result.resultLocation(),
+                    resultLocation,
                     result.frameCount()
             );
 

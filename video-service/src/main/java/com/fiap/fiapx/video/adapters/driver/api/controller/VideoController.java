@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,7 +66,13 @@ public class VideoController {
         if (video.getZipPath() == null || video.getZipPath().isBlank()) {
             return ResponseEntity.notFound().build();
         }
-        Path path = Paths.get(video.getZipPath());
+        String zipPath = video.getZipPath().trim();
+        if (zipPath.startsWith("http://") || zipPath.startsWith("https://")) {
+            return ResponseEntity.status(302)
+                    .location(URI.create(zipPath))
+                    .build();
+        }
+        Path path = Paths.get(zipPath);
         if (!Files.isRegularFile(path)) {
             return ResponseEntity.notFound().build();
         }

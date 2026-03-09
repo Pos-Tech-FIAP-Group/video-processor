@@ -56,7 +56,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <button mat-icon-button [routerLink]="['/videos', v.id]" matTooltip="Detalhes" aria-label="Detalhes">
                   <mat-icon>visibility</mat-icon>
                 </button>
-                <button mat-icon-button (click)="downloadZip(v.id, v.originalFilename)" [disabled]="v.status !== 'CONCLUIDO' || !v.zipPath || downloadingId === v.id" [matTooltip]="(v.status === 'CONCLUIDO' && v.zipPath) ? 'Download ZIP' : 'Disponível quando concluído'" aria-label="Download ZIP">
+                <button mat-icon-button (click)="downloadZip(v.id, v.originalFilename, v.zipPath)" [disabled]="v.status !== 'CONCLUIDO' || !v.zipPath || downloadingId === v.id" [matTooltip]="(v.status === 'CONCLUIDO' && v.zipPath) ? 'Download ZIP' : 'Disponível quando concluído'" aria-label="Download ZIP">
                   <mat-icon>download</mat-icon>
                 </button>
               </td>
@@ -125,7 +125,11 @@ export class VideoListComponent implements OnInit {
     });
   }
 
-  downloadZip(videoId: string, originalFilename: string): void {
+  downloadZip(videoId: string, originalFilename: string, zipPath: string | null): void {
+    if (zipPath && (zipPath.startsWith('http://') || zipPath.startsWith('https://'))) {
+      window.open(zipPath, '_blank');
+      return;
+    }
     if (this.downloadingId) return;
     this.downloadingId = videoId;
     this.videoService.downloadZip(videoId).subscribe({

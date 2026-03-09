@@ -133,6 +133,11 @@ export class VideoDetailDialogComponent implements OnInit {
   downloadZip(): void {
     const videoId = this.video?.id ?? this.data?.videoId;
     if (!videoId || !this.video?.originalFilename) return;
+    const zipPath = this.video.zipPath;
+    if (zipPath && (zipPath.startsWith('http://') || zipPath.startsWith('https://'))) {
+      window.open(zipPath, '_blank');
+      return;
+    }
     this.downloadingZip = true;
     this.videoService.downloadZip(videoId).subscribe({
       next: (blob) => {
