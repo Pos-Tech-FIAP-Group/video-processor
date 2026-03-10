@@ -13,14 +13,54 @@
 
     <artifactId>notification-service</artifactId>
     <name>Notification Service</name>
-    <!-- ALTERAR: trocar para <packaging>jar</packaging> quando começar a implementar o serviço -->
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <!-- ALTERAR: ao implementar, adicionar <dependencies> aqui.
-         Ex.: spring-boot-starter-amqp, spring-boot-starter-mail, spring-boot-starter-web,
-         actuator, spring-boot-starter-thymeleaf, lombok, spring-boot-starter-test.
-         Ver referência em 0-docs/guia-inicio-projeto.md (seção Notification Service). -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
 
-    <!-- ALTERAR: ao implementar, adicionar <build><plugins> com spring-boot-maven-plugin
-         para gerar o JAR executável. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
