@@ -43,6 +43,7 @@ jobs:
           cd auth-service && mvn -B verify sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=pos-tech-fiap-group
+          -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/auth-service/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_VIDEO_PROCESSOR }}
 
