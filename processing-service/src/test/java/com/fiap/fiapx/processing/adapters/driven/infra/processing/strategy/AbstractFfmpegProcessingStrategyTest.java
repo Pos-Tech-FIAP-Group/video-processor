@@ -1,5 +1,6 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.processing.strategy;
 
+import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
@@ -15,40 +16,53 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AbstractFfmpegProcessingStrategyTest {
 
-    private static class TestStrategy extends AbstractFfmpegProcessingStrategy {
-
-        TestStrategy(Path zipsDirectory) {
-            super(zipsDirectory);
-        }
+    private static class FakeProcessRunner implements ProcessRunner {
 
         @Override
-        protected VideoFormat getSupportedFormat() {
-            return VideoFormat.MP4;
-        }
-
-        @Override
-        protected void extractFramesWithFfmpeg(Path videoPath, Path outputDir, double frameIntervalSeconds) throws IOException {
-            // Simula o FFmpeg gerando três frames PNG
-            Files.createFile(outputDir.resolve("frame_0001.png"));
-            Files.createFile(outputDir.resolve("frame_0002.png"));
-            Files.createFile(outputDir.resolve("frame_0003.png"));
+        public ProcessResult run(String... command) throws IOException {
+            // Último argumento é o padrão de saída dos frames (frame_%04d.png)
+            String outputPattern = command[command.length - 1];
+            Path patternPath = Paths.get(outputPattern);
+            Path dir = patternPath.getParent();
+            Files.createDirectories(dir);
+            Files.createFile(dir.resolve("frame_0001.png"));
+            Files.createFile(dir.resolve("frame_0002.png"));
+            Files.createFile(dir.resolve("frame_0003.png"));
+            return new ProcessResult(0, "");
         }
     }
 
-    private static class FailingStrategy extends AbstractFfmpegProcessingStrategy {
+    private static class ExitCodeProcessRunner implements ProcessRunner {
 
-        FailingStrategy(Path zipsDirectory) {
-            super(zipsDirectory);
+        private final int exitCode;
+
+        ExitCodeProcessRunner(int exitCode) {
+            this.exitCode = exitCode;
+        }
+
+        @Override
+        public ProcessResult run(String... command) {
+            return new ProcessResult(exitCode, "");
+        }
+    }
+
+    private static class InterruptingProcessRunner implements ProcessRunner {
+
+        @Override
+        public ProcessResult run(String... command) throws InterruptedException {
+            throw new InterruptedException("interrupted");
+        }
+    }
+
+    private static class TestStrategy extends AbstractFfmpegProcessingStrategy {
+
+        TestStrategy(Path zipsDirectory, ProcessRunner processRunner) {
+            super(zipsDirectory, processRunner);
         }
 
         @Override
         protected VideoFormat getSupportedFormat() {
             return VideoFormat.MP4;
-        }
-
-        @Override
-        protected void extractFramesWithFfmpeg(Path videoPath, Path outputDir, double frameIntervalSeconds) throws IOException {
-            throw new IOException("Simulated FFmpeg failure");
         }
     }
 
@@ -66,7 +80,7 @@ class AbstractFfmpegProcessingStrategyTest {
                     "user-456"
             );
 
-            TestStrategy strategy = new TestStrategy(zipsDir);
+            TestStrategy strategy = new TestStrategy(zipsDir, new FakeProcessRunner());
 
             ProcessingResult result = strategy.processVideo(request);
 
@@ -107,7 +121,7 @@ class AbstractFfmpegProcessingStrategyTest {
                     "user-456"
             );
 
-            TestStrategy strategy = new TestStrategy(zipsDir);
+            TestStrategy strategy = new TestStrategy(zipsDir, new FakeProcessRunner());
 
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                     () -> strategy.processVideo(request));
@@ -141,7 +155,42 @@ class AbstractFfmpegProcessingStrategyTest {
                     "user-456"
             );
 
-            FailingStrategy strategy = new FailingStrategy(zipsDir);
+            TestStrategy strategy = new TestStrategy(zipsDir, new ExitCodeProcessRunner(1));
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> strategy.processVideo(request));
+
+            assertTrue(ex.getMessage().contains("Failed to process video"));
+        } finally {
+            Files.deleteIfExists(tempVideo);
+            if (Files.exists(zipsDir)) {
+                try (var paths = Files.walk(zipsDir).sorted(Comparator.reverseOrder())) {
+                    paths.forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    @Test
+    void shouldWrapInterruptedExceptionFromFfmpeg() throws IOException {
+        Path tempVideo = Files.createTempFile("video-", ".mp4");
+        Path zipsDir = Files.createTempDirectory("zips-");
+
+        try {
+            VideoProcessingRequest request = new VideoProcessingRequest(
+                    "video-123",
+                    tempVideo,
+                    1.0,
+                    VideoFormat.MP4,
+                    "user-456"
+            );
+
+            TestStrategy strategy = new TestStrategy(zipsDir, new InterruptingProcessRunner());
 
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> strategy.processVideo(request));
