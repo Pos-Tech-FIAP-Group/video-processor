@@ -24,7 +24,7 @@ Serviços disponíveis:
 | API Gateway        | 8080  | http://localhost:8080  |
 | Auth Service       | 8081  | http://localhost:8081  |
 | Video Service      | 8082  | (via gateway)          |
-| Processing Service | 8083  | (interno)              |
+| Processing Service | 8083  | (interno; sem API REST, só fila RabbitMQ) |
 | RabbitMQ            | 5672 / 15672 | (interno / management) |
 | MongoDB             | 27017 | (interno ao auth)      |
 
@@ -83,4 +83,4 @@ Se essas variáveis não forem definidas, o processing-service continua funciona
 ### Video Service e Processing Service
 
 - **Video Service:** ver `video-service/README.md` (upload de vídeo, listagem, download do ZIP, consumo da fila de processamento concluído).
-- **Processing Service:** ver `processing-service/README.md` (processamento com FFmpeg, upload opcional para S3, filas RabbitMQ).
+- **Processing Service:** ver `processing-service/README.md` (processamento via fila RabbitMQ com FFmpeg, upload opcional para S3; **sem API REST**).

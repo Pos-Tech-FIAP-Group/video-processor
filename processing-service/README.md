@@ -1,6 +1,6 @@
 # Processing Service
 
-Microsserviço responsável por **processar vídeos** (extração de frames) no sistema Video Processor FIAP X. Não persiste dados: consome mensagens da fila, processa com FFmpeg e publica o resultado na fila `video.processing.completed.processing-service` para o **video-service** consumir.
+Microsserviço responsável por **processar vídeos** (extração de frames) no sistema Video Processor FIAP X. Não persiste dados: consome mensagens da fila, processa com FFmpeg e publica o resultado na fila `video.processing.completed.processing-service` para o **video-service** consumir. A entrada é exclusivamente via fila RabbitMQ; não há API REST exposta por este serviço.
 
 ## Arquitetura
 
@@ -11,7 +11,7 @@ Microsserviço responsável por **processar vídeos** (extração de frames) no 
 
 ## Fluxo
 
-1. **Entrada**: o processing-service consome mensagens da fila de processamento (exchange `video.processing.exchange`, routing key `video.processing.request`, queue `video.processing.queue`).
+1. **Entrada**: o processing-service consome mensagens da fila de processamento (exchange `video.processing.exchange`, routing key `video.processing.requested`, queue `video.processing.queue`).
 2. **Processamento**:
    - Valida `frameIntervalSeconds` contra a duração do vídeo (FFprobe).
    - Detecta o formato do vídeo (extensão ou FFprobe).
@@ -84,7 +84,7 @@ Variáveis de ambiente principais:
 | `SPRING_RABBITMQ_PORT` | Porta AMQP | `5672` |
 | `SPRING_RABBITMQ_USERNAME` | Usuário | `admin` |
 | `SPRING_RABBITMQ_PASSWORD` | Senha | `admin123` |
-| `PROCESSING_STORAGE_BASE_PATH` | Diretório base para vídeos e zips locais (paths da API são relativos a ele) | `/data` |
+| `PROCESSING_STORAGE_BASE_PATH` | Diretório base para vídeos e zips (usado pelo consumer ao ler vídeos e gravar ZIPs) | `/data` |
 | `PROCESSING_STORAGE_S3_BUCKET` | Nome do bucket S3 para upload dos zips (se vazio, não envia para S3) | — |
 | `AWS_REGION` | Região do bucket S3 | — |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credenciais do usuário IAM com permissão de escrita no bucket | — |
@@ -119,34 +119,10 @@ mvn -pl processing-service test
 
 Testes de integração usam **Testcontainers** para subir um RabbitMQ efêmero.
 
-## API REST – Endpoint e como testar
-
-| Método | Path | Descrição |
-|--------|------|-----------|
-| `POST` | `/api/process/extract-frames` | Extrai frames do vídeo em um intervalo configurável e gera um ZIP no mesmo diretório. |
-
-**Request (JSON):**
-- `videoPath` (obrigatório): path **relativo ao diretório base** (ex.: `/data`). Aceita `video.mp4`, `video1/video.mp4`, com ou sem barra no início — o serviço resolve sempre sob o base path.
-- `frameIntervalSeconds` (opcional): intervalo em segundos entre um frame e outro. Default `1.0`. Se informado, deve ser > 0.
-
-```json
-{"videoPath": "video.mp4"}
-{"videoPath": "video1/video.mp4", "frameIntervalSeconds": 2.0}
-```
-
-**Response 200:** `{"zipPath": "/data/video_frames.zip"}`
-
-**Exemplo curl** (base path `/data`, volume `./storage:/data`):
-```bash
-curl -X POST http://localhost:8082/api/process/extract-frames \
-  -H "Content-Type: application/json" \
-  -d '{"videoPath": "video.mp4", "frameIntervalSeconds": 2.0}'
-```
-
 ## Integração com o Video Service
 
 - O **video-service** persiste os vídeos (ex.: PostgreSQL), controla status (PENDENTE, PROCESSANDO, CONCLUIDO, ERRO) e expõe API para listar e fazer download.
-- Para disparar o processamento, o video-service (ou outro serviço) deve **publicar** uma mensagem na exchange/fila de entrada do processing-service (ex.: `video.processing.exchange` + routing key `video.processing.request`), com payload contendo pelo menos: `videoId`, `inputLocation`, `frameIntervalSeconds`, `userId`, e opcionalmente `format`.
+- Para disparar o processamento, o video-service (ou outro serviço) deve **publicar** uma mensagem na exchange/fila de entrada do processing-service (ex.: `video.processing.exchange` + routing key `video.processing.requested`), com payload contendo pelo menos: `videoId`, `inputLocation`, `frameIntervalSeconds`, `userId`, e opcionalmente `format`.
 - Ao concluir, o processing-service publica na **`video.processing.completed.processing-service`**. O video-service deve ter um **consumer** dessa fila para atualizar o vídeo (status CONCLUIDO, `zipPath` = `resultLocation`) e, se aplicável, mover/copiar o ZIP para o storage definitivo.
 
 ## Estrutura do serviço (resumo)
@@ -158,7 +134,7 @@ processing-service/
 │   └── application/         # ProcessVideoUseCase, ports (VideoProcessingStrategyPort, VideoFormatDetectorPort, VideoMetadataPort, ProcessingEventPublisherPort, ZipStorageUploadPort)
 ├── adapters/
 │   ├── driven/infra/        # FFmpeg strategies, detector, metadata, RabbitMqProcessingEventPublisher, S3ZipStorageUploadAdapter
-│   └── driver/api/          # RabbitMqConfig, VideoProcessingConsumer, DTOs, exception handler
+│   └── driver/api/          # RabbitMqConfig, VideoProcessingConsumer, DTOs da mensagem, exception handler (sem controller REST)
 ├── src/main/resources/
 │   └── application.yml
 ├── Dockerfile
