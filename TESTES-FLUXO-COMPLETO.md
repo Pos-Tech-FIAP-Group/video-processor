@@ -6,7 +6,7 @@
  - **Autenticação**: o gateway roteia `/api/auth/**` para o **auth-service** (registro, login e validação de JWT).
  - **Vídeos**: o gateway roteia `/api/videos/**` para o **video-service** (upload, listagem, detalhes).
  - **Mensageria**: o `video-service` publica o pedido de processamento na exchange `video.processing.exchange` (RabbitMQ), com routing key `video.processing.requested`.
- - **Processamento**: o `processing-service` consome a fila principal (binding com a mesma routing key), lê o vídeo da **mesma pasta em disco** (`/shared/videos`) e processa com FFmpeg; em seguida publica eventos de sucesso/erro.
+ - **Processamento**: o `processing-service` consome a fila principal (binding com a mesma routing key), lê o vídeo da **mesma pasta em disco** (`/shared/videos`) e processa com FFmpeg; em seguida publica eventos de sucesso/erro. O processing-service não expõe endpoints HTTP (apenas fila RabbitMQ).
  - **Atualização**: o `video-service` consome eventos de conclusão e atualiza o status do vídeo no PostgreSQL.
  
  ---
