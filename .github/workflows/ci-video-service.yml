@@ -1,5 +1,3 @@
-# CI: video-service - build, test (80% coverage), SonarCloud, build image, push GHCR
-# Testcontainers (PostgreSQL) requer Docker no runner
 name: CI Video Service
 
 on:
@@ -15,17 +13,25 @@ on:
       - 'video-service/**'
       - 'pom.xml'
       - '.github/workflows/ci-video-service.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-video-service-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   JAVA_VERSION: '21'
+  SERVICE_PATH: video-service
+  IMAGE_NAME: video-processor-video-service
   MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false
 
 jobs:
-  ci:
+  validate:
+    name: Build and Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout
@@ -33,46 +39,102 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Build, test and SonarCloud
-        run: |
-          cd video-service && mvn -B verify sonar:sonar \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=pos-tech-fiap-group \
-            -Dsonar.coverage.exclusions="src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java"
+      - name: Run Maven verify
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: mvn -B verify
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: |
+            ${{ env.SERVICE_PATH }}/target/site/jacoco
+            ${{ env.SERVICE_PATH }}/target/*.xml
+          if-no-files-found: ignore
+
+  sonar:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    needs: [validate]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Run SonarCloud analysis
+        working-directory: ${{ env.SERVICE_PATH }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_VIDEO_PROCESSOR }}
+        run: >
+          mvn -B sonar:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=pos-tech-fiap-group
+          -Dsonar.projectKey=com.fiap.fiapx:video-service
+          -Dsonar.coverage.exclusions=src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java
+
+  docker:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    needs: [validate, sonar]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image owner lowercase
+        run: echo "REPO_OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Set GHCR image owner (lowercase)
-        if: github.event_name != 'pull_request'
-        run: echo "REPO_OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
-
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Build and push image
-        if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: video-service/Dockerfile
+          file: ${{ env.SERVICE_PATH }}/Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ env.REPO_OWNER_LC }}/video-processor-video-service:${{ github.sha }}
-            ghcr.io/${{ env.REPO_OWNER_LC }}/video-processor-video-service:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
