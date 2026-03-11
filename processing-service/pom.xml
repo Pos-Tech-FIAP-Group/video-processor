@@ -18,7 +18,24 @@
     <properties>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.organization>pos-tech-fiap-group</sonar.organization>
-        <sonar.coverage.exclusions>src/main/java/**/ProcessingServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java</sonar.coverage.exclusions>
+        <!-- Escopo de cobertura do Sonar apenas para código de regra de negócio e adapters relevantes -->
+        <sonar.coverage.exclusions>
+            src/main/java/**/ProcessingServiceApplication.java,
+            src/main/java/**/config/**/*.java,
+            src/main/java/**/dto/**/*.java,
+            src/main/java/**/exception/**/*.java,
+            src/main/java/**/exceptionhandler/**/*.java,
+            src/main/java/**/ports/**/*.java,
+            src/main/java/**/domain/enums/**/*.java,
+            src/main/java/**/adapters/driven/infra/processing/metadata/FfmpegVideoMetadataAdapter.java,
+            src/main/java/**/adapters/driven/infra/processing/adapter/FfmpegVideoFrameExtractorAdapter.java,
+            src/main/java/**/adapters/driven/infra/processing/strategy/AbstractFfmpegProcessingStrategy.java,
+            src/main/java/**/adapters/driver/api/config/RabbitMqConfig.java,
+            src/main/java/**/adapters/driven/infra/config/ProcessingStorageConfig.java,
+            src/main/java/**/adapters/driver/api/dto/response/ProcessingCompletedEvent.java,
+            src/main/java/**/adapters/driver/api/dto/response/ProcessingFailedEvent.java,
+            src/main/java/**/adapters/driver/api/exceptionhandler/GlobalExceptionHandler.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -126,10 +143,8 @@
                                 <exclude>**/exception/**</exclude>
                                 <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
-                                <exclude>**/domain/enums/**</exclude>
-                                <!-- Infra de processamento FFmpeg, difícil de testar sem binários/FS reais -->
-                                <exclude>**/adapters/driven/infra/processing/**</exclude>
-                                <!-- Adapters de mensageria e entrada (Rabbit/HTTP) ficam fora do cálculo de cobertura -->
+                                <exclude>**/domain/enums/**</exclude>                                
+                                <exclude>**/adapters/driven/infra/processing/**</exclude>                                
                                 <exclude>**/adapters/driven/infra/messaging/**</exclude>
                                 <exclude>**/adapters/driver/api/consumer/**</exclude>
                                 <exclude>**/adapters/driver/api/controller/**</exclude>
