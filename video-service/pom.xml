@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://www.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -16,7 +16,20 @@
     <packaging>jar</packaging>
 
     <properties>
-        <sonar.coverage.exclusions>src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java</sonar.coverage.exclusions>
+        <!-- evita warning da IDE; valor real é injetado pelo JaCoCo em tempo de build -->
+        <argLine></argLine>
+
+        <sonar.coverage.exclusions>
+            src/main/java/**/VideoServiceApplication.java,
+            src/main/java/**/config/**/*.java,
+            src/main/java/**/dto/**/*.java,
+            src/main/java/**/exception/**/*.java,
+            src/main/java/**/exceptionhandler/**/*.java,
+            src/main/java/**/exceptions/**/*.java,
+            src/main/java/**/ports/**/*.java,
+            src/main/java/**/domain/enums/**/*.java,
+            src/main/java/**/entity/**/*.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -47,12 +60,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!--
-             Bean Validation (Jakarta Validation API)
-             Necessário para suporte a anotações como @NotNull, @NotBlank, @Valid em DTOs.
-             Também remove o warning de inicialização do Spring Boot sobre ausência de provider.
-             Será utilizado nos endpoints de upload e criação de vídeos.
-        -->
+        <!-- Bean Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -76,34 +84,34 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
-        <!-- Flyway PostgreSQL support (necessário para reconhecer PostgreSQL 16+) -->
+        <!-- Flyway PostgreSQL support -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- Lombok - Redução de boilerplate -->
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- Testcontainers - PostgreSQL (banco real para testes de integração) -->
+        <!-- Testcontainers - PostgreSQL -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Integra Spring Boot + Testcontainers (auto-configura datasource do container) -->
+        <!-- Spring Boot + Testcontainers -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers JUnit 5 integration (@Testcontainers, @Container) -->
+        <!-- Testcontainers JUnit 5 -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -142,6 +150,7 @@
                 </configuration>
             </plugin>
 
+            <!-- JaCoCo -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -156,6 +165,7 @@
                             <propertyName>argLine</propertyName>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
@@ -176,6 +186,7 @@
                             </excludes>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>check</id>
                         <phase>verify</phase>
@@ -207,6 +218,50 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Unit tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>${argLine}</argLine>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/*IT.java</exclude>
+                        <exclude>**/*BDDTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>${argLine}</argLine>
+                    <includes>
+                        <include>**/*IntegrationTest.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*BDDTest.java</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
