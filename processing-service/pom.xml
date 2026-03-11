@@ -18,7 +18,18 @@
     <properties>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.organization>pos-tech-fiap-group</sonar.organization>
-        <sonar.coverage.exclusions>src/main/java/**/ProcessingServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java</sonar.coverage.exclusions>
+        <!-- Escopo de cobertura do Sonar alinhado com os excludes do JaCoCo:
+             apenas casos de uso e modelos de domínio entram na métrica -->
+        <sonar.coverage.exclusions>
+            src/main/java/**/ProcessingServiceApplication.java,
+            src/main/java/**/config/**/*.java,
+            src/main/java/**/dto/**/*.java,
+            src/main/java/**/exception/**/*.java,
+            src/main/java/**/exceptionhandler/**/*.java,
+            src/main/java/**/ports/**/*.java,
+            src/main/java/**/domain/enums/**/*.java,            
+            src/main/java/**/adapters/driven/infra/messaging/**/*.java,                        
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -126,7 +137,8 @@
                                 <exclude>**/exception/**</exclude>
                                 <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
-                                <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/domain/enums/**</exclude>                                                                                        
+                                <exclude>**/adapters/driven/infra/messaging/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -144,7 +156,8 @@
                                 <exclude>**/exception/**</exclude>
                                 <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
-                                <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/domain/enums/**</exclude>                                
+                                <exclude>**/adapters/driven/infra/messaging/**</exclude>
                             </excludes>
                             <rules>
                                 <rule>

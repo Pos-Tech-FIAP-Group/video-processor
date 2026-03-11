@@ -76,4 +76,14 @@ class VideoProcessingStrategyFactoryTest {
         // Then
         assertTrue(result.isEmpty());
     }
+
+    @Test
+    void shouldFindStrategyWhenFormatIsSupported() {
+        // When
+        var result = factory.findStrategy(VideoFormat.MP4);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(mp4Strategy, result.get());
+    }
 }
