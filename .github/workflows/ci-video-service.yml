@@ -26,9 +26,34 @@ env:
   MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Compile project
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: mvn -B clean compile test-compile
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    needs: [build]
     timeout-minutes: 20
     permissions:
       contents: read
@@ -53,7 +78,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [ unit-tests ]
+    needs: [build, unit-tests]
     timeout-minutes: 25
     permissions:
       contents: read
@@ -103,7 +128,7 @@ jobs:
   bdd-tests:
     name: BDD Tests
     runs-on: ubuntu-latest
-    needs: [integration-tests]
+    needs: [build, integration-tests]
     timeout-minutes: 20
     permissions:
       contents: read
@@ -127,7 +152,7 @@ jobs:
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, bdd-tests]
+    needs: [build, unit-tests, integration-tests, bdd-tests]
     timeout-minutes: 15
     permissions:
       contents: read
@@ -167,7 +192,7 @@ jobs:
   docker:
     name: Build and Push Image
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, bdd-tests, sonar]
+    needs: [build, unit-tests, integration-tests, bdd-tests, sonar]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
     permissions:
