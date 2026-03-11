@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +21,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CreateVideoUseCaseImplTest {
@@ -52,10 +50,10 @@ class CreateVideoUseCaseImplTest {
         ArgumentCaptor<Video> captor = ArgumentCaptor.forClass(Video.class);
         verify(repository).save(captor.capture());
         verify(publishPort).publish(
-                eq(result.getId()),
-                eq(userId),
-                eq("/tmp/video.mp4"),
-                eq(2.5)
+                result.getId(),
+                userId,
+                "/tmp/video.mp4",
+                2.5
         );
 
         Video saved = captor.getValue();

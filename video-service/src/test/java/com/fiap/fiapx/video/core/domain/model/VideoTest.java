@@ -108,10 +108,12 @@ class VideoTest {
     @Test
     void deve_validar_campos_obrigatorios_no_construtor() {
         Instant now = Instant.now();
+        UUID userId = UUID.randomUUID();
+        UUID videoId = UUID.randomUUID();
 
         assertThatThrownBy(() -> new Video(
                 null,
-                UUID.randomUUID(),
+                userId,
                 "video.mp4",
                 "video/mp4",
                 "/tmp/video.mp4",
@@ -122,12 +124,13 @@ class VideoTest {
                 now,
                 now,
                 null
-        )).isInstanceOf(NullPointerException.class)
-          .hasMessage("Id é obrigatório");
+        ))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Id é obrigatório");
 
         assertThatThrownBy(() -> new Video(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
+                videoId,
+                userId,
                 " ",
                 "video/mp4",
                 "/tmp/video.mp4",

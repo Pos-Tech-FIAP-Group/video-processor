@@ -6,6 +6,8 @@ import com.fiap.fiapx.video.core.domain.model.Video;
 
 public final class VideoApiMapper {
 
+    private VideoApiMapper() {}
+
     public static CreateVideoResponse toCreateResponse(Video video) {
         return new CreateVideoResponse(video.getId(), video.getStatus(), video.getCreatedAt());
     }

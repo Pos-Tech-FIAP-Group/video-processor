@@ -33,7 +33,7 @@ class TempFileStorageTest {
 
         Path path = Path.of(storedPath);
         assertThat(path).exists();
-        assertThat(path.getParent().getFileName().toString()).isEqualTo(userId.toString());
+        assertThat(path.getParent().getFileName()).hasToString(userId.toString());
         assertThat(path.getFileName().toString()).contains("video_teste.mp4");
         assertThat(Files.readString(path)).isEqualTo("conteudo");
     }
@@ -42,12 +42,15 @@ class TempFileStorageTest {
     void deve_lancar_excecao_quando_arquivo_for_nulo_ou_vazio() {
         TempFileStorage storage = new TempFileStorage(tempDir.toString());
 
-        assertThatThrownBy(() -> storage.store(UUID.randomUUID(), null))
+        UUID userId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> storage.store(userId, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Arquivo de vídeo é obrigatório.");
 
         MockMultipartFile empty = new MockMultipartFile("file", new byte[0]);
-        assertThatThrownBy(() -> storage.store(UUID.randomUUID(), empty))
+
+        assertThatThrownBy(() -> storage.store(userId, empty))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Arquivo de vídeo é obrigatório.");
     }
