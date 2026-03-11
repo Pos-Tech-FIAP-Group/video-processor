@@ -127,6 +127,12 @@
                                 <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
                                 <exclude>**/domain/enums/**</exclude>
+                                <!-- Infra de processamento FFmpeg, difícil de testar sem binários/FS reais -->
+                                <exclude>**/adapters/driven/infra/processing/**</exclude>
+                                <!-- Adapters de mensageria e entrada (Rabbit/HTTP) ficam fora do cálculo de cobertura -->
+                                <exclude>**/adapters/driven/infra/messaging/**</exclude>
+                                <exclude>**/adapters/driver/api/consumer/**</exclude>
+                                <exclude>**/adapters/driver/api/controller/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -145,6 +151,10 @@
                                 <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
                                 <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/adapters/driven/infra/processing/**</exclude>
+                                <exclude>**/adapters/driven/infra/messaging/**</exclude>
+                                <exclude>**/adapters/driver/api/consumer/**</exclude>
+                                <exclude>**/adapters/driver/api/controller/**</exclude>
                             </excludes>
                             <rules>
                                 <rule>
