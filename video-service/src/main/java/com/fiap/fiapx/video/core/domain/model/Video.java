@@ -28,6 +28,7 @@ public class Video {
     private final Instant updatedAt;
     private final Instant processedAt;
 
+    @SuppressWarnings("java:S107")
     public Video(
             UUID id,
             UUID userId,
