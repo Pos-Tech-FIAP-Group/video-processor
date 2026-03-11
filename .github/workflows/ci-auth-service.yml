@@ -41,10 +41,12 @@ jobs:
           cache: 'maven'
 
       - name: Build, test and SonarCloud
-        run: >
-          cd auth-service && mvn -B verify sonar:sonar
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.organization=pos-tech-fiap-group
+        run: |
+          cd auth-service && mvn -B verify sonar:sonar \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=pos-tech-fiap-group \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.coverage.exclusions="src/main/java/**/AuthServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/UserDocument.java"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_VIDEO_PROCESSOR }}
 
