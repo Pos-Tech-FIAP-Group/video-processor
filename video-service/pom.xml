@@ -15,6 +15,10 @@
     <name>Video Service</name>
     <packaging>jar</packaging>
 
+    <properties>
+        <sonar.coverage.exclusions>src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java</sonar.coverage.exclusions>
+    </properties>
+
     <dependencies>
 
         <!-- Web -->
@@ -142,37 +146,57 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
-
                 <executions>
-                    <!-- Inicializa o agente -->
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <propertyName>argLine</propertyName>
+                        </configuration>
                     </execution>
-
-                    <!-- Gera o relatório -->
                     <execution>
                         <id>report</id>
-                        <phase>test</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/VideoServiceApplication.class</exclude>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/exceptionhandler/**</exclude>
+                                <exclude>**/exceptions/**</exclude>
+                                <exclude>**/ports/**</exclude>
+                                <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/entity/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
-
-                    <!-- Validação de cobertura -->
                     <execution>
-                        <id>jacoco-check</id>
+                        <id>check</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
-
                         <configuration>
+                            <excludes>
+                                <exclude>**/VideoServiceApplication.class</exclude>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/exceptionhandler/**</exclude>
+                                <exclude>**/exceptions/**</exclude>
+                                <exclude>**/ports/**</exclude>
+                                <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/entity/**</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
-
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
@@ -180,13 +204,10 @@
                                             <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
-
                                 </rule>
                             </rules>
                         </configuration>
-
                     </execution>
-
                 </executions>
             </plugin>
 

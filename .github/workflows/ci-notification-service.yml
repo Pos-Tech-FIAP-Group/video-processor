@@ -1,0 +1,49 @@
+# CI: notification-service - build, test (80% coverage), SonarCloud
+# Sem Dockerfile neste módulo; apenas build, testes e análise Sonar
+name: CI Notification Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'notification-service/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-notification-service.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'notification-service/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-notification-service.yml'
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build, test and SonarCloud
+        run: |
+          cd notification-service && mvn -B verify sonar:sonar \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=pos-tech-fiap-group \
+            -Dsonar.coverage.exclusions="src/main/java/**/NotificationServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_VIDEO_PROCESSOR }}
