@@ -57,6 +57,7 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -78,13 +79,26 @@ jobs:
 
       - name: Run integration tests
         working-directory: ${{ env.SERVICE_PATH }}
-        run: mvn -B verify -DskipUnitTests=true
+        run: mvn -B failsafe:integration-test failsafe:verify
 
       - name: Publish JaCoCo coverage
+        if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.6.1
         with:
           paths: video-service/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts for Sonar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-service-build
+          path: |
+            video-service/target/classes
+            video-service/target/test-classes
+            video-service/target/site/jacoco/jacoco.xml
+            video-service/target/jacoco.exec
+          if-no-files-found: error
 
   bdd-tests:
     name: BDD Tests
@@ -114,7 +128,7 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, bdd-tests]
-    timeout-minutes: 25
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -131,20 +145,23 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
-      - name: Pull Testcontainers images
-        run: |
-          docker pull testcontainers/ryuk:0.11.0
-          docker pull postgres:16-alpine
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: video-service-build
+          path: video-service/target
 
       - name: Run SonarCloud analysis
         working-directory: ${{ env.SERVICE_PATH }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_VIDEO_PROCESSOR }}
         run: >
-          mvn -B verify sonar:sonar
+          mvn -B sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=pos-tech-fiap-group
           -Dsonar.projectKey=com.fiap.fiapx:video-service
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           -Dsonar.coverage.exclusions=src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java
 
   docker:
