@@ -26,8 +26,8 @@ env:
   MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false
 
 jobs:
-  validate:
-    name: Build and Test
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -46,25 +46,75 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
-      - name: Run Maven verify
+      - name: Run unit tests
         working-directory: ${{ env.SERVICE_PATH }}
-        run: mvn -B verify
+        run: mvn -B test
 
-      - name: Upload JaCoCo report
-        if: always()
-        uses: actions/upload-artifact@v4
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 25
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          name: jacoco-report
-          path: |
-            ${{ env.SERVICE_PATH }}/target/site/jacoco
-            ${{ env.SERVICE_PATH }}/target/*.xml
-          if-no-files-found: ignore
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Pull Testcontainers images
+        run: |
+          docker pull testcontainers/ryuk:0.11.0
+          docker pull postgres:16-alpine
+
+      - name: Run integration tests
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: mvn -B verify -DskipUnitTests=true
+
+      - name: Publish JaCoCo coverage
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: video-service/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  bdd-tests:
+    name: BDD Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Placeholder for BDD tests
+        run: echo "BDD tests job preparado. Os cenários serão adicionados no próximo PR."
 
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
-    needs: [validate]
-    timeout-minutes: 20
+    needs: [unit-tests, integration-tests, bdd-tests]
+    timeout-minutes: 25
     permissions:
       contents: read
 
@@ -80,6 +130,11 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
+
+      - name: Pull Testcontainers images
+        run: |
+          docker pull testcontainers/ryuk:0.11.0
+          docker pull postgres:16-alpine
 
       - name: Run SonarCloud analysis
         working-directory: ${{ env.SERVICE_PATH }}
@@ -91,12 +146,11 @@ jobs:
           -Dsonar.organization=pos-tech-fiap-group
           -Dsonar.projectKey=com.fiap.fiapx:video-service
           -Dsonar.coverage.exclusions=src/main/java/**/VideoServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/exceptions/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/**/*.java
-          
 
   docker:
     name: Build and Push Image
     runs-on: ubuntu-latest
-    needs: [validate, sonar]
+    needs: [unit-tests, integration-tests, bdd-tests, sonar]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
     permissions:
