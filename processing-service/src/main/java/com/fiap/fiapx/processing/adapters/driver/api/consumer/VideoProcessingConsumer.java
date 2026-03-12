@@ -2,7 +2,6 @@ package com.fiap.fiapx.processing.adapters.driver.api.consumer;
 
 import com.fiap.fiapx.processing.adapters.driver.api.dto.request.VideoProcessingMessage;
 import com.fiap.fiapx.processing.core.application.usecases.ProcessVideoUseCase;
-import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

@@ -6,10 +6,8 @@ import com.fiap.fiapx.processing.core.domain.model.VideoDuration;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Scanner;
 
 /**
  * Adapter para obter metadados de vídeo usando FFprobe.

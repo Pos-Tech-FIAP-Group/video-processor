@@ -7,7 +7,6 @@ import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.*;
 import java.util.Comparator;
 import java.util.stream.Stream;

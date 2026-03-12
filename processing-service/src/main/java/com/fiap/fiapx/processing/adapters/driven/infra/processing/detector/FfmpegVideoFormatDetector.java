@@ -4,8 +4,6 @@ import com.fiap.fiapx.processing.core.application.ports.VideoFormatDetectorPort;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
