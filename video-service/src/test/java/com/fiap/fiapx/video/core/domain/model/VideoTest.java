@@ -48,7 +48,7 @@ class VideoTest {
 
     @Test
     void nao_deve_finalizar_processamento_quando_status_for_invalido() {
-        Video video = novoVideo(VideoStatus.PENDENTE);
+        Video video = novoVideo(VideoStatus.CONCLUIDO);
 
         assertThatThrownBy(() -> video.completeProcessing(42, "/tmp/video.zip"))
                 .isInstanceOf(IllegalStateException.class)

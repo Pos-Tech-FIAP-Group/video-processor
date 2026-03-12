@@ -74,7 +74,7 @@ public class Video {
                 contentType,
                 videoPath,
                 null,
-                VideoStatus.PROCESSANDO,
+                    VideoStatus.PROCESSANDO,
                 null,
                 null,
                 now,

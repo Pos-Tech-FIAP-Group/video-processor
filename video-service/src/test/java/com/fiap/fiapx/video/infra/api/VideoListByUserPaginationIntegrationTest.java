@@ -60,7 +60,7 @@ class VideoListByUserPaginationIntegrationTest {
                     "video/mp4",
                     "/tmp/video-" + i + ".mp4",
                     null,
-                    "PENDENTE",
+                    "PROCESSANDO",
                     null,
                     null,
                     createdAt,
@@ -70,6 +70,7 @@ class VideoListByUserPaginationIntegrationTest {
         }
 
         ResponseEntity<PagedResponse<VideoResponse>> response = restTemplate.exchange(
+
                 "/api/videos?userId={userId}&page={page}&size={size}",
                 HttpMethod.GET,
                 null,
