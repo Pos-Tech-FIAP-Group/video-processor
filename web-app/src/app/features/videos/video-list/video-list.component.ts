@@ -56,9 +56,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <button mat-icon-button [routerLink]="['/videos', v.id]" matTooltip="Detalhes" aria-label="Detalhes">
                   <mat-icon>visibility</mat-icon>
                 </button>
-                <button mat-icon-button (click)="downloadZip(v.id, v.originalFilename, v.zipPath)" [disabled]="v.status !== 'CONCLUIDO' || !v.zipPath || downloadingId === v.id" [matTooltip]="(v.status === 'CONCLUIDO' && v.zipPath) ? 'Download ZIP' : 'Disponível quando concluído'" aria-label="Download ZIP">
+                <a
+                  mat-icon-button
+                  *ngIf="v.status === 'CONCLUIDO' && v.zipPath"
+                  [href]="v.zipPath"
+                  target="_blank"
+                  rel="noopener"
+                  matTooltip="Download ZIP"
+                  aria-label="Download ZIP"
+                >
                   <mat-icon>download</mat-icon>
-                </button>
+                </a>
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -128,24 +136,6 @@ export class VideoListComponent implements OnInit {
   downloadZip(videoId: string, originalFilename: string, zipPath: string | null): void {
     if (zipPath && (zipPath.startsWith('http://') || zipPath.startsWith('https://'))) {
       window.open(zipPath, '_blank');
-      return;
     }
-    if (this.downloadingId) return;
-    this.downloadingId = videoId;
-    this.videoService.downloadZip(videoId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const baseName = originalFilename.replace(/\.[^.]+$/, '') || 'video';
-        a.download = `${baseName}_frames.zip`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.downloadingId = null;
-      },
-      error: () => {
-        this.downloadingId = null;
-      },
-    });
   }
 }
