@@ -33,10 +33,10 @@ Thumbs.db
 logs/
 
 # Storage (vídeos, temporários, outputs)
-storage/
-uploads/
-outputs/
-temp/
+/storage/
+/uploads/
+/outputs/
+/temp/
 /tmp/
 
 # Environment / config local
