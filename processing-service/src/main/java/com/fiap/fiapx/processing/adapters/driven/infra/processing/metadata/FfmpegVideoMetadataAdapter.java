@@ -28,11 +28,11 @@ public class FfmpegVideoMetadataAdapter implements VideoMetadataPort {
         if (videoPath == null || !Files.exists(videoPath)) {
             throw new IllegalArgumentException("Video path must exist: " + videoPath);
         }
-        
+
         try {
             ProcessRunner.ProcessResult result = processRunner.run(
                     "ffprobe",
-                    "-v", "error",
+                    "-v", "quiet",
                     "-show_entries", "format=duration",
                     "-of", "default=noprint_wrappers=1:nokey=1",
                     videoPath.toAbsolutePath().toString()
@@ -42,10 +42,17 @@ public class FfmpegVideoMetadataAdapter implements VideoMetadataPort {
                 throw new IOException("FFprobe exited with code " + result.exitCode());
             }
 
-            String durationStr = result.stdout() != null ? result.stdout().trim() : null;
+            String rawOutput = result.stdout() != null ? result.stdout().trim() : "";
 
-            if (durationStr == null || durationStr.isEmpty()) {
+            if (rawOutput.isEmpty()) {
                 throw new IOException("Could not extract duration from video: " + videoPath);
+            }
+
+            String[] outputParts = rawOutput.split("\\s+");
+            String durationStr = outputParts[outputParts.length - 1];
+
+            if ("N/A".equalsIgnoreCase(durationStr)) {
+                throw new RuntimeException("FFprobe returned N/A. Video metadata is missing duration: " + videoPath);
             }
 
             double durationSeconds = Double.parseDouble(durationStr);
