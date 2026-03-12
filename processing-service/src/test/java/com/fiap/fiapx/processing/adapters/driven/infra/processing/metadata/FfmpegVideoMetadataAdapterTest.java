@@ -127,4 +127,40 @@ class FfmpegVideoMetadataAdapterTest {
             Files.deleteIfExists(tempVideo);
         }
     }
+
+    @Test
+    void shouldUseLastTokenFromOutputAsDuration() throws IOException {
+        Path tempVideo = Files.createTempFile("video-metadata-", ".mp4");
+
+        try {
+            FfmpegVideoMetadataAdapter adapter = new FfmpegVideoMetadataAdapter(
+                    new StubProcessRunner(0, "some extra info 42.5")
+            );
+
+            VideoDuration duration = adapter.getDuration(tempVideo);
+
+            assertNotNull(duration);
+            assertEquals(42.5, duration.seconds());
+        } finally {
+            Files.deleteIfExists(tempVideo);
+        }
+    }
+
+    @Test
+    void shouldThrowWhenFfprobeReturnsNAForDuration() throws IOException {
+        Path tempVideo = Files.createTempFile("video-metadata-", ".mp4");
+
+        try {
+            FfmpegVideoMetadataAdapter adapter = new FfmpegVideoMetadataAdapter(
+                    new StubProcessRunner(0, "N/A")
+            );
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> adapter.getDuration(tempVideo));
+
+            assertTrue(ex.getMessage().contains("Video metadata is missing duration"));
+        } finally {
+            Files.deleteIfExists(tempVideo);
+        }
+    }
 }
