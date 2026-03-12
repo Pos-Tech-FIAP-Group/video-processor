@@ -1,5 +1,6 @@
 package com.fiap.fiapx.video.adapters.driver.api.files;
 
+import com.fiap.fiapx.video.core.application.ports.DeleteTempVideoPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class TempFileStorage {
+public class TempFileStorage implements DeleteTempVideoPort {
 
     private final Path baseDir;
 
@@ -43,6 +44,19 @@ public class TempFileStorage {
             return target.toString();
         } catch (IOException e) {
             throw new IllegalStateException("Falha ao salvar o vídeo em diretório temporário.", e);
+        }
+    }
+
+    @Override
+    public void deleteIfExists(String videoPath) {
+        if (videoPath == null || videoPath.isBlank()) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(Paths.get(videoPath).toAbsolutePath().normalize());
+        } catch (IOException e) {
+            throw new IllegalStateException("Falha ao remover o vídeo do diretório temporário.", e);
         }
     }
 }

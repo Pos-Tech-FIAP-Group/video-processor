@@ -4,6 +4,8 @@ import com.fiap.fiapx.video.core.application.exceptions.VideoNotFoundException;
 import com.fiap.fiapx.video.core.application.ports.VideoRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.fiap.fiapx.video.core.application.ports.DeleteTempVideoPort;
+import com.fiap.fiapx.video.core.domain.enums.VideoStatus;
 
 import java.util.UUID;
 
@@ -12,6 +14,7 @@ import java.util.UUID;
 public class UpdateVideoProcessingResultUseCaseImpl implements UpdateVideoProcessingResultUseCase {
 
     private final VideoRepositoryPort videoRepositoryPort;
+    private final DeleteTempVideoPort deleteTempVideoPort;
 
 
     @Override
@@ -21,6 +24,9 @@ public class UpdateVideoProcessingResultUseCaseImpl implements UpdateVideoProces
 
         var processed = video.completeProcessing(frameCount, zipPath);
         videoRepositoryPort.save(processed);
+        if (processed.getStatus() == VideoStatus.CONCLUIDO) {
+            deleteTempVideoPort.deleteIfExists(processed.getVideoPath());
+        }
     }
 
     @Override
