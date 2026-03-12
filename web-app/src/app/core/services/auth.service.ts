@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest } from '../../shared/models/auth.model';
+import { AuthResponse, LoginRequest, RegisterRequest, RegisterResponse } from '../../shared/models/auth.model';
 
 const TOKEN_KEY = 'video_processor_token';
 const USER_UUID_KEY = 'video_processor_user_uuid';
@@ -26,6 +26,14 @@ export class AuthService {
         sessionStorage.setItem(USERNAME_KEY, res.username);
       }),
     );
+  }
+
+  /**
+   * Registra novo usuário.
+   * Erro 400: validação ou username/email já existe — body tem { status, message }.
+   */
+  register(request: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, request);
   }
 
   logout(): void {
