@@ -1,5 +1,6 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.messaging;
 
+import com.fiap.fiapx.processing.core.domain.exception.EventPublishingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -117,7 +118,7 @@ class RabbitMqProcessingEventPublisherTest {
                         any(Object.class)
                 );
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+        EventPublishingException ex = assertThrows(EventPublishingException.class, () ->
                 publisher.publishProcessingCompleted("video-123", "location", 10L)
         );
 
@@ -134,7 +135,7 @@ class RabbitMqProcessingEventPublisherTest {
                         any(Object.class)
                 );
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+        EventPublishingException ex = assertThrows(EventPublishingException.class, () ->
                 publisher.publishProcessingFailed("video-123", "error")
         );
 

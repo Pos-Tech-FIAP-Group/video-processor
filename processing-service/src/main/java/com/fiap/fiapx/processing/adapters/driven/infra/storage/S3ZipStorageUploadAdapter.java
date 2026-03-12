@@ -1,6 +1,7 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.storage;
 
 import com.fiap.fiapx.processing.core.application.ports.ZipStorageUploadPort;
+import com.fiap.fiapx.processing.core.domain.exception.StorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,7 +64,7 @@ public class S3ZipStorageUploadAdapter implements ZipStorageUploadPort {
             return Optional.of(publicUrl);
         } catch (Exception e) {
             logger.error("Failed to upload zip to S3: key={}", key, e);
-            throw new RuntimeException("S3 upload failed: " + e.getMessage(), e);
+            throw new StorageException("S3 upload failed: " + e.getMessage(), e);
         }
     }
 

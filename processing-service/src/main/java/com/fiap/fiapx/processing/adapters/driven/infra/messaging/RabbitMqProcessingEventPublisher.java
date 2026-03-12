@@ -1,6 +1,7 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.messaging;
 
 import com.fiap.fiapx.processing.core.application.ports.ProcessingEventPublisherPort;
+import com.fiap.fiapx.processing.core.domain.exception.EventPublishingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -46,7 +47,7 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
             logger.info("Published processing completed event for videoId: {}, frameCount: {}", videoId, frameCount);
         } catch (Exception e) {
             logger.error("Failed to publish processing completed event for videoId: {}", videoId, e);
-            throw new RuntimeException("Failed to publish event", e);
+            throw new EventPublishingException("Failed to publish event", e);
         }
     }
 
@@ -66,7 +67,7 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
             logger.info("Published processing failed event for videoId: {}", videoId);
         } catch (Exception e) {
             logger.error("Failed to publish processing failed event for videoId: {}", videoId, e);
-            throw new RuntimeException("Failed to publish event", e);
+            throw new EventPublishingException("Failed to publish event", e);
         }
     }
 

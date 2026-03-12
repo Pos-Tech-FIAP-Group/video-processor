@@ -2,7 +2,7 @@ package com.fiap.fiapx.processing.adapters.driver.api.consumer;
 
 import com.fiap.fiapx.processing.adapters.driver.api.dto.request.VideoProcessingMessage;
 import com.fiap.fiapx.processing.core.application.usecases.ProcessVideoUseCase;
-import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public class VideoProcessingConsumer {
         } catch (Exception e) {
             logger.error("Error processing video message for videoId: {}", videoId, e);
             // Re-throw para que o RabbitMQ possa fazer requeue ou enviar para DLQ
-            throw new RuntimeException("Failed to process video: " + videoId, e);
+            throw new ProcessingException("Failed to process video: " + videoId, e);
         } finally {
             MDC.remove("videoId");
         }

@@ -1,6 +1,7 @@
 package com.fiap.fiapx.processing.core.application.usecases;
 
 import com.fiap.fiapx.processing.core.application.ports.*;
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 import org.slf4j.Logger;
@@ -70,7 +71,12 @@ public class ProcessVideoUseCase {
         } catch (Exception e) {
             logger.error("Video processing failed for videoId: {}", videoId, e);
             eventPublisherPort.publishProcessingFailed(videoId, e.getMessage());
-            throw e;
+
+            if (e instanceof IllegalArgumentException || e instanceof ProcessingException) {
+                throw e;
+            }
+
+            throw new ProcessingException("Failed to process video", e);
         } finally {
             MDC.remove("videoId");
         }

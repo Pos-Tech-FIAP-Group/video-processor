@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8083
 
 # Base path for video and zip storage; consumer reads videos and writes zips under this path.
 processing:

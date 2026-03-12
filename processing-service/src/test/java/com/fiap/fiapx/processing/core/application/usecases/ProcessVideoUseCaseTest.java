@@ -2,6 +2,7 @@ package com.fiap.fiapx.processing.core.application.usecases;
 
 import com.fiap.fiapx.processing.core.application.ports.*;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoDuration;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
@@ -64,8 +65,9 @@ class ProcessVideoUseCaseTest {
     @Test
     void shouldProcessVideoSuccessfully() {
         VideoDuration duration = new VideoDuration(10.0);
+        Path localZipPath = Paths.get("/tmp/result.zip");
         ProcessingResult result = new ProcessingResult(
-                Paths.get("/tmp/result.zip"),
+                localZipPath,
                 10L,
                 "/tmp/result.zip"
         );
@@ -79,7 +81,7 @@ class ProcessVideoUseCaseTest {
         assertDoesNotThrow(() -> processVideoUseCase.execute(request));
 
         verify(videoMetadataPort).getDuration(videoPath);
-        verify(zipStorageUploadPort).uploadAndGetPublicUrl(eq(Paths.get("/tmp/result.zip")), eq("user-456"), eq("video-123"));
+        verify(zipStorageUploadPort).uploadAndGetPublicUrl(localZipPath, "user-456", "video-123");
         verify(eventPublisherPort).publishProcessingCompleted("video-123", "/tmp/result.zip", 10L);
     }
 
@@ -94,7 +96,7 @@ class ProcessVideoUseCaseTest {
         when(formatDetectorPort.detectFormat(videoPath)).thenReturn(VideoFormat.MP4);
         when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
         when(strategyPort.processVideo(any())).thenReturn(result);
-        when(zipStorageUploadPort.uploadAndGetPublicUrl(eq(zipPath), eq("user-456"), eq("video-123")))
+        when(zipStorageUploadPort.uploadAndGetPublicUrl(zipPath, "user-456", "video-123"))
                 .thenReturn(Optional.of(s3Url));
 
         assertDoesNotThrow(() -> processVideoUseCase.execute(request));
@@ -134,7 +136,24 @@ class ProcessVideoUseCaseTest {
         when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
         when(strategyPort.processVideo(any())).thenThrow(processingError);
 
-        assertThrows(RuntimeException.class, () -> processVideoUseCase.execute(request));
+        ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
+        assertTrue(ex.getMessage().contains("Failed to process video"));
+
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+    }
+
+    @Test
+    void shouldPropagateExistingProcessingException() {
+        VideoDuration duration = new VideoDuration(10.0);
+        ProcessingException processingException = new ProcessingException("Domain-specific processing error");
+
+        when(videoMetadataPort.getDuration(videoPath)).thenReturn(duration);
+        when(formatDetectorPort.detectFormat(videoPath)).thenReturn(VideoFormat.MP4);
+        when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
+        when(strategyPort.processVideo(any())).thenThrow(processingException);
+
+        ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
+        assertSame(processingException, ex);
 
         verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
     }
