@@ -15,6 +15,11 @@
     <name>Auth Service</name>
     <packaging>jar</packaging>
 
+    <!-- Sonar: exclusões de cobertura -->
+    <properties>
+        <sonar.coverage.exclusions>src/main/java/**/AuthServiceApplication.java,src/main/java/**/config/**/*.java,src/main/java/**/dto/**/*.java,src/main/java/**/exception/**/*.java,src/main/java/**/exceptionhandler/**/*.java,src/main/java/**/ports/**/*.java,src/main/java/**/domain/enums/**/*.java,src/main/java/**/entity/UserDocument.java</sonar.coverage.exclusions>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -160,10 +165,42 @@
                                 <exclude>**/config/**</exclude>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/exception/**</exclude>
+                                <exclude>**/exceptionhandler/**</exclude>
                                 <exclude>**/ports/**</exclude>
                                 <exclude>**/domain/enums/**</exclude>
                                 <exclude>**/entity/UserDocument.class</exclude>
                             </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/AuthServiceApplication.class</exclude>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/exceptionhandler/**</exclude>
+                                <exclude>**/ports/**</exclude>
+                                <exclude>**/domain/enums/**</exclude>
+                                <exclude>**/entity/UserDocument.class</exclude>
+                            </excludes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>

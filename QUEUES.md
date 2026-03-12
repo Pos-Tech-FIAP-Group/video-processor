@@ -16,7 +16,7 @@
 - **Parâmetros**:
   - **Exchange**: `video.processing.exchange` (Topic)  
   - **Fila**: `video.processing.queue`  
-  - **Routing key (binding)**: `video.processing.request`  
+  - **Routing key (binding)**: `video.processing.requested`  
   - **DLQ**:
     - `x-dead-letter-exchange = video.processing.dlq.exchange`
     - `x-dead-letter-routing-key = video.processing.dlq`
@@ -35,8 +35,7 @@
 - **Parâmetros**:
   - **Exchange**: `video.processing.exchange`  
   - **Routing key (produtor)**: `video.processing.requested`  
-- **Observação**:
-  - O `processing-service` escuta `video.processing.request`, então hoje há **divergência de routing key** (`request` vs `requested`).
+- O binding da fila `video.processing.queue` usa a mesma routing key (`video.processing.requested`), alinhado ao produtor.
 
 ---
 
@@ -118,7 +117,7 @@ flowchart LR
   end
 
   vs_pub -->|"video.processing.exchange / video.processing.requested"| ex_main["video.processing.exchange"]
-  ex_main -->|"binding esperado: video.processing.request"| ps_consume
+  ex_main -->|"video.processing.requested"| ps_consume
 
   ps_consume -->|"DLQ em erro"| dlq["video.processing.dlq"]
 

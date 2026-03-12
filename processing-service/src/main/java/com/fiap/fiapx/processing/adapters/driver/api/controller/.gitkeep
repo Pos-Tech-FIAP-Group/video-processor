@@ -1,0 +1,1 @@
+# Controller REST não utilizado neste serviço; entrada é apenas via consumer RabbitMQ.

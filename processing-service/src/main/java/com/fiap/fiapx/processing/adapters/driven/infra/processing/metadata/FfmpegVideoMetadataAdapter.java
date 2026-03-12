@@ -1,5 +1,6 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.processing.metadata;
 
+import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
 import com.fiap.fiapx.processing.core.application.ports.VideoMetadataPort;
 import com.fiap.fiapx.processing.core.domain.model.VideoDuration;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,12 @@ import java.util.Scanner;
 @Component
 public class FfmpegVideoMetadataAdapter implements VideoMetadataPort {
     
+    private final ProcessRunner processRunner;
+
+    public FfmpegVideoMetadataAdapter(ProcessRunner processRunner) {
+        this.processRunner = processRunner;
+    }
+    
     @Override
     public VideoDuration getDuration(Path videoPath) {
         if (videoPath == null || !Files.exists(videoPath)) {
@@ -23,36 +30,27 @@ public class FfmpegVideoMetadataAdapter implements VideoMetadataPort {
         }
         
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                "ffprobe",
-                "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
-                videoPath.toAbsolutePath().toString()
+            ProcessRunner.ProcessResult result = processRunner.run(
+                    "ffprobe",
+                    "-v", "error",
+                    "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1",
+                    videoPath.toAbsolutePath().toString()
             );
-            
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            
-            String durationStr;
-            try (InputStream inputStream = process.getInputStream();
-                 Scanner scanner = new Scanner(inputStream)) {
-                
-                durationStr = scanner.hasNext() ? scanner.next().trim() : null;
+
+            if (result.exitCode() != 0) {
+                throw new IOException("FFprobe exited with code " + result.exitCode());
             }
-            
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new IOException("FFprobe exited with code " + exitCode);
-            }
-            
+
+            String durationStr = result.stdout() != null ? result.stdout().trim() : null;
+
             if (durationStr == null || durationStr.isEmpty()) {
                 throw new IOException("Could not extract duration from video: " + videoPath);
             }
-            
+
             double durationSeconds = Double.parseDouble(durationStr);
             return new VideoDuration(durationSeconds);
-            
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("FFprobe was interrupted", e);

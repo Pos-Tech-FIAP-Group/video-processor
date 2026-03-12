@@ -45,6 +45,9 @@ public class AuthServiceValidateClient implements TokenValidationClient {
                 return new ValidateResponse(false, null);
             }
             return objectMapper.readValue(response.body(), ValidateResponse.class);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ValidateResponse(false, null);
         } catch (Exception e) {
             return new ValidateResponse(false, null);
         }

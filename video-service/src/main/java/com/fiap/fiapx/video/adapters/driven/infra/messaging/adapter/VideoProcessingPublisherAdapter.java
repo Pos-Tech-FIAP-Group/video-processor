@@ -16,8 +16,8 @@ public class VideoProcessingPublisherAdapter implements PublishVideoProcessingRe
     private final RabbitTemplate rabbitTemplate;
 
     @Override
-    public void publish(UUID videoId, UUID userId, String videoPath) {
-        var message = new VideoProcessingRequestedMessage(videoId, userId, videoPath);
+    public void publish(UUID videoId, UUID userId, String videoPath, Double frameIntervalSeconds) {
+        var message = new VideoProcessingRequestedMessage(videoId, userId, videoPath, frameIntervalSeconds);
         rabbitTemplate.convertAndSend(RabbitMqConfig.EXCHANGE, RabbitMqConfig.RK_REQUESTED, message);
     }
 }

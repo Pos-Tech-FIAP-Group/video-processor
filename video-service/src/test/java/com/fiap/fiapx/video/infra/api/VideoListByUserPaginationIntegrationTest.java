@@ -1,11 +1,15 @@
 package com.fiap.fiapx.video.infra.api;
 
-
+import com.fiap.fiapx.video.adapters.driver.api.dto.response.VideoResponse;
+import com.fiap.fiapx.video.adapters.driver.api.exceptionhandler.RestExceptionHandler;
+import com.fiap.fiapx.video.adapters.driven.infra.persistence.repository.PagedResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,8 +20,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +60,7 @@ class VideoListByUserPaginationIntegrationTest {
                     "video/mp4",
                     "/tmp/video-" + i + ".mp4",
                     null,
-                    "PENDENTE",
+                    "PROCESSANDO",
                     null,
                     null,
                     createdAt,
@@ -67,9 +69,12 @@ class VideoListByUserPaginationIntegrationTest {
             );
         }
 
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        ResponseEntity<PagedResponse<VideoResponse>> response = restTemplate.exchange(
+
                 "/api/videos?userId={userId}&page={page}&size={size}",
-                Map.class,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {},
                 userId,
                 0,
                 10
@@ -78,33 +83,27 @@ class VideoListByUserPaginationIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
 
-        assertThat(response.getBody().get("page")).isEqualTo(0);
-        assertThat(response.getBody().get("size")).isEqualTo(10);
-        assertThat(response.getBody().get("totalItems")).isEqualTo(15);
-        assertThat(response.getBody().get("totalPages")).isEqualTo(2);
+        PagedResponse<VideoResponse> body = response.getBody();
 
-        Object itemsObj = response.getBody().get("items");
-        assertThat(itemsObj).isInstanceOf(List.class);
+        assertThat(body.page()).isZero();
+        assertThat(body.size()).isEqualTo(10);
+        assertThat(body.totalItems()).isEqualTo(15);
+        assertThat(body.totalPages()).isEqualTo(2);
+        assertThat(body.items()).hasSize(10);
 
-        List<?> items = (List<?>) itemsObj;
-        assertThat(items).hasSize(10);
-
-        // Primeiro item deve ser o mais recente (video-15.mp4) por created_at desc
-        Map<?, ?> first = (Map<?, ?>) items.get(0);
-        assertThat(first.get("originalFilename")).isEqualTo("video-15.mp4");
-
-        // Último da página 0 deve ser video-6.mp4 (15..6 = 10 itens)
-        Map<?, ?> last = (Map<?, ?>) items.get(9);
-        assertThat(last.get("originalFilename")).isEqualTo("video-6.mp4");
+        assertThat(body.items().get(0).originalFilename()).isEqualTo("video-15.mp4");
+        assertThat(body.items().get(9).originalFilename()).isEqualTo("video-6.mp4");
     }
 
     @Test
     void deve_retornar_200_com_lista_vazia_quando_usuario_nao_tiver_videos() {
         UUID userId = UUID.randomUUID();
 
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        ResponseEntity<PagedResponse<VideoResponse>> response = restTemplate.exchange(
                 "/api/videos?userId={userId}&page={page}&size={size}",
-                Map.class,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {},
                 userId,
                 0,
                 10
@@ -113,24 +112,27 @@ class VideoListByUserPaginationIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
 
-        assertThat(response.getBody().get("totalItems")).isEqualTo(0);
-        assertThat(response.getBody().get("totalPages")).isEqualTo(0);
+        PagedResponse<VideoResponse> body = response.getBody();
 
-        Object itemsObj = response.getBody().get("items");
-        assertThat(itemsObj).isInstanceOf(List.class);
-        assertThat((List<?>) itemsObj).isEmpty();
+        assertThat(body.totalItems()).isZero();
+        assertThat(body.totalPages()).isZero();
+        assertThat(body.items()).isEmpty();
     }
 
     @Test
     void deve_retornar_400_quando_userId_for_invalido() {
-        ResponseEntity<String> response = restTemplate.getForEntity(
-                "/api/videos?userId={userId}&page={page}&size={size}",
-                String.class,
-                "user-invalido",
-                0,
-                10
-        );
+        ResponseEntity<RestExceptionHandler.ErrorResponse> response =
+                restTemplate.getForEntity(
+                        "/api/videos?userId={userId}&page={page}&size={size}",
+                        RestExceptionHandler.ErrorResponse.class,
+                        "user-invalido",
+                        0,
+                        10
+                );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().status()).isEqualTo(400);
+        assertThat(response.getBody().timestamp()).isNotNull();
     }
 }

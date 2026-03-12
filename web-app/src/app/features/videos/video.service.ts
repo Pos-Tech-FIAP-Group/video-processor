@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoResponse, CreateVideoResponse, PageResponse } from '../../shared/models/video.model';
 
@@ -23,9 +24,17 @@ export class VideoService {
     return this.http.get(`${this.apiUrl}/${id}/zip`, { responseType: 'blob' });
   }
 
-  upload(file: File): Observable<CreateVideoResponse> {
+  upload(file: File, frameIntervalSeconds?: number): Observable<CreateVideoResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<CreateVideoResponse>(this.apiUrl, formData);
+    if (frameIntervalSeconds != null && frameIntervalSeconds > 0) {
+      formData.append('frameIntervalSeconds', String(frameIntervalSeconds));
+    }
+    return this.http.post<CreateVideoResponse>(this.apiUrl, formData, {
+      observe: 'response',
+      responseType: 'json',
+    }).pipe(
+      map((res) => res.body ?? { id: '', status: 'PROCESSANDO' as const, createdAt: new Date().toISOString() }),
+    );
   }
 }

@@ -11,17 +11,11 @@ import com.fiap.fiapx.video.core.application.usecases.ListVideosByUserUseCase;
 import com.fiap.fiapx.video.core.application.usecases.command.CreateVideoCommand;
 import com.fiap.fiapx.video.core.domain.model.Video;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -37,7 +31,8 @@ public class VideoController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreateVideoResponse> create(
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestPart("file") MultipartFile file
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(name = "frameIntervalSeconds", required = false) Double frameIntervalSeconds
     ) {
         String storedPath = tempFileStorage.store(userId, file);
 
@@ -45,37 +40,17 @@ public class VideoController {
                 userId,
                 file.getOriginalFilename(),
                 file.getContentType(),
-                storedPath
+                storedPath,
+                frameIntervalSeconds
         );
 
-        createVideoUseCase.execute(command);
-
-        return ResponseEntity.accepted().build();
+        Video video = createVideoUseCase.execute(command);
+        return ResponseEntity.accepted().body(VideoApiMapper.toCreateResponse(video));
     }
     @GetMapping("/{id}")
     public ResponseEntity<VideoResponse> findById(@PathVariable("id") UUID id) {
         var video = findVideoByIdUseCase.execute(id);
         return ResponseEntity.ok(VideoApiMapper.toResponse(video));
-    }
-
-    @GetMapping(value = "/{id}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<Resource> downloadZip(@PathVariable("id") UUID id) {
-        Video video = findVideoByIdUseCase.execute(id);
-        if (video.getZipPath() == null || video.getZipPath().isBlank()) {
-            return ResponseEntity.notFound().build();
-        }
-        Path path = Paths.get(video.getZipPath());
-        if (!Files.isRegularFile(path)) {
-            return ResponseEntity.notFound().build();
-        }
-        String filename = video.getOriginalFilename();
-        int lastDot = filename != null ? filename.lastIndexOf('.') : -1;
-        String baseName = (lastDot > 0 && filename != null) ? filename.substring(0, lastDot) : (filename != null ? filename : "video");
-        String downloadName = baseName + "_frames.zip";
-        Resource resource = new FileSystemResource(path);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
-                .body(resource);
     }
 
     @GetMapping

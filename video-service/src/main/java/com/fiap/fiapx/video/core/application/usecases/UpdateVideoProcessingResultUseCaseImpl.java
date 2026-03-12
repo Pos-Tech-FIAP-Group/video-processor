@@ -2,7 +2,6 @@ package com.fiap.fiapx.video.core.application.usecases;
 
 import com.fiap.fiapx.video.core.application.exceptions.VideoNotFoundException;
 import com.fiap.fiapx.video.core.application.ports.VideoRepositoryPort;
-import com.fiap.fiapx.video.core.application.usecases.UpdateVideoProcessingResultUseCase;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

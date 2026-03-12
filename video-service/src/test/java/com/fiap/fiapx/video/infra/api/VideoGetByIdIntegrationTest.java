@@ -1,5 +1,8 @@
 package com.fiap.fiapx.video.infra.api;
 
+import com.fiap.fiapx.video.adapters.driver.api.dto.response.VideoResponse;
+import com.fiap.fiapx.video.adapters.driver.api.exceptionhandler.RestExceptionHandler;
+import com.fiap.fiapx.video.core.domain.enums.VideoStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +17,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +56,7 @@ class VideoGetByIdIntegrationTest {
                 "video/mp4",
                 "/tmp/video.mp4",
                 null,
-                "PENDENTE",
+                "PROCESSANDO",
                 null,
                 null,
                 now,
@@ -62,38 +64,53 @@ class VideoGetByIdIntegrationTest {
                 null
         );
 
-        ResponseEntity<Map> response =
-                restTemplate.getForEntity("/api/videos/{id}", Map.class, videoId);
+        ResponseEntity<VideoResponse> response =
+                restTemplate.getForEntity("/api/videos/{id}", VideoResponse.class, videoId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("id")).isEqualTo(videoId.toString());
-        assertThat(response.getBody().get("userId")).isEqualTo(userId.toString());
-        assertThat(response.getBody().get("status")).isEqualTo("PENDENTE");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().id()).isEqualTo(videoId);
+        assertThat(response.getBody().userId()).isEqualTo(userId);
+        assertThat(response.getBody().status()).isEqualTo(VideoStatus.PROCESSANDO);
+
     }
 
     @Test
     void deve_retornar_404_quando_video_nao_existir() {
         UUID inexistente = UUID.randomUUID();
 
-        ResponseEntity<Map> response =
-                restTemplate.getForEntity("/api/videos/{id}", Map.class, inexistente);
+        ResponseEntity<RestExceptionHandler.ErrorResponse> response =
+                restTemplate.getForEntity(
+                        "/api/videos/{id}",
+                        RestExceptionHandler.ErrorResponse.class,
+                        inexistente
+                );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNotNull();
 
-        assertThat(response.getBody().get("status")).isEqualTo(404);
-        assertThat(response.getBody().get("code")).isEqualTo("NOT_FOUND");
-        assertThat(String.valueOf(response.getBody().get("message")))
-                .contains(inexistente.toString());
-        assertThat(response.getBody()).containsKey("timestamp");
+        var body = response.getBody();
+
+        assertThat(body.status()).isEqualTo(404);
+        assertThat(body.code()).isEqualTo("NOT_FOUND");
+        assertThat(body.message()).contains(inexistente.toString());
+        assertThat(body.timestamp()).isNotNull();
     }
 
     @Test
     void deve_retornar_400_quando_uuid_for_invalido() {
-        ResponseEntity<String> response =
-                restTemplate.getForEntity("/api/videos/{id}", String.class, "id-invalido");
+        ResponseEntity<RestExceptionHandler.ErrorResponse> response =
+                restTemplate.getForEntity("/api/videos/{id}", RestExceptionHandler.ErrorResponse.class, "id-invalido");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+
+        var body = response.getBody();
+
+        assertThat(body.status()).isEqualTo(400);
+        assertThat(body.timestamp()).isNotNull();
     }
 }

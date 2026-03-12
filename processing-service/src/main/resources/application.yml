@@ -1,10 +1,13 @@
 server:
   port: 8082
 
-# Base path for video files. Request paths are relative to this (e.g. "video.mp4" or "video1/video.mp4" -> /data/video.mp4).
+# Base path for video and zip storage; consumer reads videos and writes zips under this path.
 processing:
   storage:
     base-path: ${PROCESSING_STORAGE_BASE_PATH:/data}
+    s3:
+      bucket: ${PROCESSING_STORAGE_S3_BUCKET:}
+      region: ${AWS_REGION:}
 
 spring:
   application:

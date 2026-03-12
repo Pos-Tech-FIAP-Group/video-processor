@@ -1,5 +1,6 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.processing.strategy;
 
+import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
 import com.fiap.fiapx.processing.core.application.ports.VideoProcessingStrategyPort;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
@@ -23,9 +24,11 @@ public abstract class AbstractFfmpegProcessingStrategy implements VideoProcessin
     private static final String FRAME_PATTERN = "frame_%04d.png";
 
     private final Path zipsDirectory;
+    private final ProcessRunner processRunner;
 
-    protected AbstractFfmpegProcessingStrategy(Path zipsDirectory) {
+    protected AbstractFfmpegProcessingStrategy(Path zipsDirectory, ProcessRunner processRunner) {
         this.zipsDirectory = zipsDirectory;
+        this.processRunner = processRunner;
     }
 
     @Override
@@ -66,29 +69,21 @@ public abstract class AbstractFfmpegProcessingStrategy implements VideoProcessin
     protected void extractFramesWithFfmpeg(Path videoPath, Path outputDir, double frameIntervalSeconds) throws IOException {
         Path outputPattern = outputDir.resolve(FRAME_PATTERN);
         double fps = 1.0 / frameIntervalSeconds;
-        
-        ProcessBuilder pb = new ProcessBuilder(
-            "ffmpeg",
-            "-i", videoPath.toAbsolutePath().toString(),
-            "-vf", String.format("fps=%.2f", fps),
-            "-y",
-            outputPattern.toAbsolutePath().toString()
-        );
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-        
-        try (InputStream out = process.getInputStream()) {
-            out.readAllBytes(); // consume output so process doesn't block
-        }
-        
+
         try {
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new IOException("FFmpeg exited with code " + exitCode);
+            ProcessRunner.ProcessResult result = processRunner.run(
+                    "ffmpeg",
+                    "-i", videoPath.toAbsolutePath().toString(),
+                    "-vf", String.format("fps=%.2f", fps),
+                    "-y",
+                    outputPattern.toAbsolutePath().toString()
+            );
+
+            if (result.exitCode() != 0) {
+                throw new IOException("FFmpeg exited with code " + result.exitCode());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            process.destroyForcibly();
             throw new IOException("FFmpeg was interrupted", e);
         }
     }
