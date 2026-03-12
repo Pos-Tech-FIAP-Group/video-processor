@@ -143,6 +143,22 @@ class ProcessVideoUseCaseTest {
     }
 
     @Test
+    void shouldPropagateExistingProcessingException() {
+        VideoDuration duration = new VideoDuration(10.0);
+        ProcessingException processingException = new ProcessingException("Domain-specific processing error");
+
+        when(videoMetadataPort.getDuration(videoPath)).thenReturn(duration);
+        when(formatDetectorPort.detectFormat(videoPath)).thenReturn(VideoFormat.MP4);
+        when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
+        when(strategyPort.processVideo(any())).thenThrow(processingException);
+
+        ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
+        assertSame(processingException, ex);
+
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+    }
+
+    @Test
     void shouldKeepRequestFormatWhenDetectorReturnsNull() {
         VideoProcessingRequest requestWithFormat = new VideoProcessingRequest(
                 "video-123",
