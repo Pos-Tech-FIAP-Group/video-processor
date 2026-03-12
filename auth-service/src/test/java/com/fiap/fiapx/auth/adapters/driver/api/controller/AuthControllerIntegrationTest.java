@@ -143,6 +143,19 @@ class AuthControllerIntegrationTest {
             assertThat(response.getBody().valid()).isTrue();
             assertThat(response.getBody().subject()).isEqualTo("val_user");
         }
+
+        @Test
+        @DisplayName("token inválido → 200 e valid=false, subject=null")
+        void token_invalido_retorna_200_valid_false() {
+            ResponseEntity<ValidateResponse> response = restTemplate.getForEntity(
+                    "/api/auth/validate?token=token-invalido-ou-expirado",
+                    ValidateResponse.class
+            );
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().valid()).isFalse();
+            assertThat(response.getBody().subject()).isNull();
+        }
     }
 
     @Nested
