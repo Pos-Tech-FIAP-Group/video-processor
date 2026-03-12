@@ -2,6 +2,7 @@ package com.fiap.fiapx.processing.adapters.driven.infra.processing.strategy;
 
 import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.VideoProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 import org.junit.jupiter.api.Test;
@@ -157,7 +158,7 @@ class AbstractFfmpegProcessingStrategyTest {
 
             TestStrategy strategy = new TestStrategy(zipsDir, new ExitCodeProcessRunner(1));
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoProcessingException ex = assertThrows(VideoProcessingException.class,
                     () -> strategy.processVideo(request));
 
             assertTrue(ex.getMessage().contains("Failed to process video"));
@@ -192,7 +193,7 @@ class AbstractFfmpegProcessingStrategyTest {
 
             TestStrategy strategy = new TestStrategy(zipsDir, new InterruptingProcessRunner());
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoProcessingException ex = assertThrows(VideoProcessingException.class,
                     () -> strategy.processVideo(request));
 
             assertTrue(ex.getMessage().contains("Failed to process video"));

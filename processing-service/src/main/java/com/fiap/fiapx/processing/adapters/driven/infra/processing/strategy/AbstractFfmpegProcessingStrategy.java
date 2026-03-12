@@ -3,6 +3,7 @@ package com.fiap.fiapx.processing.adapters.driven.infra.processing.strategy;
 import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
 import com.fiap.fiapx.processing.core.application.ports.VideoProcessingStrategyPort;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.VideoProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 
@@ -54,7 +55,7 @@ public abstract class AbstractFfmpegProcessingStrategy implements VideoProcessin
 
             return new ProcessingResult(zipPath, frameCount, resultLocation);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to process video: " + videoPath, e);
+            throw new VideoProcessingException("Failed to process video: " + videoPath, e);
         } finally {
             if (tempDir != null) {
                 deleteRecursively(tempDir);
@@ -112,7 +113,7 @@ public abstract class AbstractFfmpegProcessingStrategy implements VideoProcessin
                                 Files.copy(framePath, zos);
                                 zos.closeEntry();
                             } catch (IOException e) {
-                                throw new RuntimeException("Failed to add entry to zip: " + framePath, e);
+                                throw new VideoProcessingException("Failed to add entry to zip: " + framePath, e);
                             }
                         });
             }

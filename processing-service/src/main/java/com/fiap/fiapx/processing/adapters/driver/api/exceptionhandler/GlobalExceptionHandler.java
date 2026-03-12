@@ -1,5 +1,6 @@
 package com.fiap.fiapx.processing.adapters.driver.api.exceptionhandler;
 
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,6 +18,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException e) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(ERROR, e.getMessage()));
+    }
+
+    @ExceptionHandler(ProcessingException.class)
+    public ResponseEntity<Map<String, String>> handleProcessingException(ProcessingException e) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of(ERROR, e.getMessage()));
     }
 

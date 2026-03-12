@@ -3,6 +3,7 @@ package com.fiap.fiapx.processing.adapters.driver.api.consumer;
 import com.fiap.fiapx.processing.adapters.driver.api.dto.request.VideoProcessingMessage;
 import com.fiap.fiapx.processing.core.application.usecases.ProcessVideoUseCase;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +93,7 @@ class VideoProcessingConsumerTest {
     }
 
     @Test
-    void shouldWrapUnexpectedExceptionInRuntimeException() {
+    void shouldWrapUnexpectedExceptionInProcessingException() {
         VideoProcessingMessage message = new VideoProcessingMessage(
                 "video-123",
                 "/tmp/test-video.mp4",
@@ -104,7 +105,7 @@ class VideoProcessingConsumerTest {
         doThrow(new RuntimeException("boom"))
                 .when(processVideoUseCase).execute(any(VideoProcessingRequest.class));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+        ProcessingException ex = assertThrows(ProcessingException.class, () ->
                 consumer.processVideoMessage(message, 1L)
         );
 

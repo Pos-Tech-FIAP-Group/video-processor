@@ -2,6 +2,7 @@ package com.fiap.fiapx.processing.core.application.usecases;
 
 import com.fiap.fiapx.processing.core.application.ports.*;
 import com.fiap.fiapx.processing.core.domain.enums.VideoFormat;
+import com.fiap.fiapx.processing.core.domain.exception.ProcessingException;
 import com.fiap.fiapx.processing.core.domain.model.ProcessingResult;
 import com.fiap.fiapx.processing.core.domain.model.VideoDuration;
 import com.fiap.fiapx.processing.core.domain.model.VideoProcessingRequest;
@@ -135,7 +136,8 @@ class ProcessVideoUseCaseTest {
         when(strategyResolver.getStrategy(VideoFormat.MP4)).thenReturn(strategyPort);
         when(strategyPort.processVideo(any())).thenThrow(processingError);
 
-        assertThrows(RuntimeException.class, () -> processVideoUseCase.execute(request));
+        ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
+        assertTrue(ex.getMessage().contains("Failed to process video"));
 
         verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
     }

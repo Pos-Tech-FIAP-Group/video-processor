@@ -1,6 +1,7 @@
 package com.fiap.fiapx.processing.adapters.driven.infra.processing.metadata;
 
 import com.fiap.fiapx.processing.adapters.driven.infra.processing.runner.ProcessRunner;
+import com.fiap.fiapx.processing.core.domain.exception.VideoMetadataException;
 import com.fiap.fiapx.processing.core.domain.model.VideoDuration;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +84,7 @@ class FfmpegVideoMetadataAdapterTest {
                     new StubProcessRunner(1, "")
             );
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoMetadataException ex = assertThrows(VideoMetadataException.class,
                     () -> adapter.getDuration(tempVideo));
 
             assertTrue(ex.getMessage().contains("Failed to get video duration"));
@@ -101,7 +102,7 @@ class FfmpegVideoMetadataAdapterTest {
                     new StubProcessRunner(0, "  ")
             );
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoMetadataException ex = assertThrows(VideoMetadataException.class,
                     () -> adapter.getDuration(tempVideo));
 
             assertTrue(ex.getMessage().contains("Failed to get video duration"));
@@ -119,7 +120,7 @@ class FfmpegVideoMetadataAdapterTest {
                     new StubProcessRunner(0, "not-a-number")
             );
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoMetadataException ex = assertThrows(VideoMetadataException.class,
                     () -> adapter.getDuration(tempVideo));
 
             assertTrue(ex.getMessage().contains("Invalid duration format from FFprobe"));
@@ -155,7 +156,7 @@ class FfmpegVideoMetadataAdapterTest {
                     new StubProcessRunner(0, "N/A")
             );
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            VideoMetadataException ex = assertThrows(VideoMetadataException.class,
                     () -> adapter.getDuration(tempVideo));
 
             assertTrue(ex.getMessage().contains("Video metadata is missing duration"));
