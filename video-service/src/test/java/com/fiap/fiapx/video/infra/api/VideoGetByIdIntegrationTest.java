@@ -56,7 +56,7 @@ class VideoGetByIdIntegrationTest {
                 "video/mp4",
                 "/tmp/video.mp4",
                 null,
-                "PENDENTE",
+                "PROCESSANDO",
                 null,
                 null,
                 now,
@@ -74,7 +74,7 @@ class VideoGetByIdIntegrationTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().id()).isEqualTo(videoId);
         assertThat(response.getBody().userId()).isEqualTo(userId);
-        assertThat(response.getBody().status()).isEqualTo(VideoStatus.PENDENTE);
+        assertThat(response.getBody().status()).isEqualTo(VideoStatus.PROCESSANDO);
 
     }
 

@@ -60,32 +60,6 @@ public class VideoController {
         return ResponseEntity.ok(VideoApiMapper.toResponse(video));
     }
 
-    @GetMapping(value = "/{id}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<Resource> downloadZip(@PathVariable("id") UUID id) {
-        Video video = findVideoByIdUseCase.execute(id);
-        if (video.getZipPath() == null || video.getZipPath().isBlank()) {
-            return ResponseEntity.notFound().build();
-        }
-        String zipPath = video.getZipPath().trim();
-        if (zipPath.startsWith("http://") || zipPath.startsWith("https://")) {
-            return ResponseEntity.status(302)
-                    .location(URI.create(zipPath))
-                    .build();
-        }
-        Path path = Paths.get(zipPath);
-        if (!Files.isRegularFile(path)) {
-            return ResponseEntity.notFound().build();
-        }
-        String filename = video.getOriginalFilename();
-        int lastDot = filename != null ? filename.lastIndexOf('.') : -1;
-        String baseName = (lastDot > 0 && filename != null) ? filename.substring(0, lastDot) : (filename != null ? filename : "video");
-        String downloadName = baseName + "_frames.zip";
-        Resource resource = new FileSystemResource(path);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
-                .body(resource);
-    }
-
     @GetMapping
     public ResponseEntity<PagedResponse<VideoResponse>> listByUser(
             @RequestParam("userId") UUID userId,
