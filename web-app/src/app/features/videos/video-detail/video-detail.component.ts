@@ -49,9 +49,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       </mat-card-content>
       <mat-card-actions>
         <button mat-stroked-button (click)="load()">Atualizar</button>
-        <button *ngIf="video.status === 'CONCLUIDO' && video.zipPath" mat-flat-button color="primary" (click)="downloadZip()" [disabled]="downloadingZip">
-          {{ downloadingZip ? 'Baixando...' : 'Download ZIP' }}
-        </button>
+        <a
+          *ngIf="video.status === 'CONCLUIDO' && video.zipPath"
+          mat-flat-button
+          color="primary"
+          [href]="video.zipPath"
+          target="_blank"
+          rel="noopener"
+        >
+          Download ZIP
+        </a>
         <button mat-button routerLink="/videos">Voltar à lista</button>
       </mat-card-actions>
     </mat-card>
@@ -110,29 +117,9 @@ export class VideoDetailComponent implements OnInit {
   }
 
   downloadZip(): void {
-    const videoId = this.video?.id ?? this.route.snapshot.paramMap.get('id');
-    if (!videoId || !this.video?.originalFilename) return;
-    const zipPath = this.video.zipPath;
+    const zipPath = this.video?.zipPath;
     if (zipPath && (zipPath.startsWith('http://') || zipPath.startsWith('https://'))) {
       window.open(zipPath, '_blank');
-      return;
     }
-    this.downloadingZip = true;
-    this.videoService.downloadZip(videoId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const baseName = this.video!.originalFilename.replace(/\.[^.]+$/, '') || 'video';
-        a.download = `${baseName}_frames.zip`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.downloadingZip = false;
-      },
-      error: () => {
-        this.error = 'Erro ao baixar o ZIP.';
-        this.downloadingZip = false;
-      },
-    });
   }
 }
