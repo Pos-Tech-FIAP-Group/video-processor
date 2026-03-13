@@ -1,14 +1,14 @@
 {
   "info": {
     "name": "Video Service - Video Processor",
-    "description": "Endpoints do Video Service direto (porta 8082).\n\n- Health: GET /api/videos/health (público).\n- List: GET /api/videos?userId=&page=&size= (UUID do usuário).\n- Get by Id: GET /api/videos/{id}.\n- Upload: POST /api/videos com header X-User-Id e form-data file.",
+    "description": "Endpoints do Video Service (acesso direto, porta 8082). Para testar via gateway use a collection do API Gateway com baseUrl http://localhost:8080 e header Authorization.\n\nVariáveis: baseUrl (8082), videoUserId (UUID do usuário, ex.: userUuid do auth), videoId (preenchido ao listar ou após upload), videoFilePath.\n\n- Health: GET /api/videos/health (público).\n- List: GET /api/videos?userId=&page=0&size=10 — resposta: items, page, size, totalItems, totalPages.\n- Get by Id: GET /api/videos/{id}.\n- Upload: POST /api/videos — header X-User-Id (UUID), form-data file; opcional frameIntervalSeconds. 202 Accepted + body (id, status, createdAt).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8082" },
-    { "key": "videoUserId", "value": "", "description": "UUID do usuário (ex: do auth-service userUuid)" },
-    { "key": "videoId", "value": "", "description": "UUID do vídeo (preenchido ao listar ou após upload)" },
-    { "key": "videoFilePath", "value": "", "description": "Caminho do vídeo para Upload" }
+    { "key": "videoUserId", "value": "", "description": "UUID do usuário (ex.: userUuid retornado no login do auth-service)" },
+    { "key": "videoId", "value": "", "description": "UUID do vídeo (preenchido ao listar ou pelo script após upload)" },
+    { "key": "videoFilePath", "value": "", "description": "Caminho do arquivo de vídeo para Upload" }
   ],
   "item": [
     {
@@ -41,7 +41,7 @@
                 { "key": "size", "value": "10" }
               ]
             },
-            "description": "Lista vídeos do usuário (paginação). Defina videoUserId (UUID)."
+            "description": "Lista vídeos do usuário (paginação). Resposta: items (array), page, size, totalItems, totalPages. Defina videoUserId (UUID). O script salva o id do primeiro item em videoId."
           },
           "event": [
             {
@@ -50,8 +50,8 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
-                  "  if (json.content && json.content.length > 0 && json.content[0].id) {",
-                  "    pm.collectionVariables.set('videoId', json.content[0].id);",
+                  "  if (json.items && json.items.length > 0 && json.items[0].id) {",
+                  "    pm.collectionVariables.set('videoId', json.items[0].id);",
                   "  }",
                   "}"
                 ],
@@ -65,7 +65,7 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/videos/{{videoId}}",
-            "description": "Busca vídeo por UUID. Defina a variável videoId (preenchida ao listar)."
+            "description": "Busca vídeo por UUID. Variável videoId é preenchida ao listar ou pelo script após upload. Resposta: id, userId, originalFilename, status, zipPath, frameCount, createdAt, etc."
           }
         },
         {
@@ -78,12 +78,27 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "{{videoFilePath}}", "description": "Defina videoFilePath na collection ou escolha o arquivo manualmente." }
+                { "key": "file", "type": "file", "src": "{{videoFilePath}}", "description": "Defina videoFilePath na collection ou escolha o arquivo no body." },
+                { "key": "frameIntervalSeconds", "value": "1", "description": "Opcional. Intervalo em segundos entre frames (default no backend).", "type": "text" }
               ]
             },
             "url": "{{baseUrl}}/api/videos",
-            "description": "Upload de vídeo (multipart). Header X-User-Id (UUID). Defina videoFilePath ou selecione o arquivo no body. 202 Accepted."
-          }
+            "description": "Upload de vídeo (multipart). Header X-User-Id (UUID). Body: file (obrigatório); frameIntervalSeconds (opcional). 202 Accepted + body (id, status, createdAt). O script salva id em videoId para usar em Get Video by Id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('videoId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     }

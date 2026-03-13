@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Fluxo Completo - Video Processor (via Gateway)",
-    "description": "Collection para testar o fluxo completo via API Gateway.\n\nUse uma environment com a variável {{host}} (por exemplo, http://localhost:8080).\n\nFluxo típico:\n1) Registrar usuário\n2) Login (salva {{token}})\n3) (Opcional) Get User / Validate Token\n4) Upload de vídeo (usa {{token}} e {{videoUserId}})\n5) Listar vídeos e buscar por ID\n6) Acompanhar processamento assíncrono (RabbitMQ + video-service).",
+    "description": "Collection para testar o fluxo completo via API Gateway.\n\nVariáveis: host (http://localhost:8080), token, userId (id Mongo), videoUserId (UUID = userUuid para X-User-Id e listagem), videoId, videoFilePath, page, size.\n\nFluxo: 1) Register 2) Login (salva token, userId, videoUserId) 3) Opcional: Validate Token / Get User 4) Upload (token + X-User-Id; 202 + body com id) 5) List Videos / Get Video by Id 6) Processamento assíncrono (RabbitMQ + video-service).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -81,7 +81,7 @@
               "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha123\"\n}"
             },
             "url": "{{host}}/api/auth/login",
-            "description": "Login via gateway. 200 + token, type, expiresIn, username. Salva token para rotas protegidas."
+            "description": "Login via gateway. 200 + token, type, expiresIn (ms), username, userId, userUuid. Salva token, userId e videoUserId (userUuid) para rotas protegidas e para Vídeos."
           },
           "event": [
             {
@@ -91,6 +91,8 @@
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
                   "  if (json.token) pm.collectionVariables.set('token', json.token);",
+                  "  if (json.userId) pm.collectionVariables.set('userId', json.userId);",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -153,8 +155,24 @@
                 { "key": "size", "value": "{{size}}" }
               ]
             },
-            "description": "Lista vídeos do usuário (paginação). Exige token. {{videoUserId}} deve ser um UUID."
-          }
+            "description": "Lista vídeos do usuário (paginação). Exige token. Resposta: items, page, size, totalItems, totalPages. Script opcional salva o id do primeiro item em videoId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.items && json.items.length > 0 && json.items[0].id) {",
+                  "    pm.collectionVariables.set('videoId', json.items[0].id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get Video by Id",
@@ -187,8 +205,22 @@
               ]
             },
             "url": "{{host}}/api/videos",
-            "description": "Upload de vídeo (multipart). Exige token e header X-User-Id (UUID). 202 Accepted."
-          }
+            "description": "Upload de vídeo (multipart). Exige token e header X-User-Id (UUID). 202 Accepted + body (id, status, createdAt). O script salva id em videoId para Get Video by Id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('videoId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

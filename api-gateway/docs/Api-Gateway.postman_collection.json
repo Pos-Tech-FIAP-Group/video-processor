@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "API Gateway - Video Processor",
-    "description": "Endpoints via API Gateway (porta 8080).\n\nAuth: públicas /api/auth/register, login, validate; protegidas /api/auth/users/{id}.\nVideos: pública /api/videos/health; protegidas /api/videos (GET lista, GET/{id}, POST upload).",
+    "description": "Endpoints via API Gateway (porta 8080).\n\nVariáveis: baseUrl, token, userId (id Mongo para Get User), videoUserId (UUID para X-User-Id e listagem de vídeos), videoId, videoFilePath.\n\nAuth: públicas /api/auth/register, login, validate; protegidas /api/auth/users/{id}. Login retorna token, userUuid, userId, expiresIn (ms).\nVideos: pública /api/videos/health; protegidas GET /api/videos?userId=..., GET /api/videos/{id}, POST /api/videos (header X-User-Id, multipart). Upload retorna 202 + body (id, status, createdAt).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -54,7 +54,7 @@
               "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login",
-            "description": "Login via gateway. 200 + token, type, expiresIn, username. Salva token para rotas protegidas."
+            "description": "Login via gateway. 200 + token, type, expiresIn (em milissegundos), username, userId, userUuid. Salva token, userId e videoUserId (userUuid) para rotas protegidas e para Vídeos (X-User-Id / userId)."
           },
           "event": [
             {
@@ -64,6 +64,8 @@
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
                   "  if (json.token) pm.collectionVariables.set('token', json.token);",
+                  "  if (json.userId) pm.collectionVariables.set('userId', json.userId);",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -214,8 +216,22 @@
               ]
             },
             "url": "{{baseUrl}}/api/videos",
-            "description": "Upload de vídeo (multipart). Exige token e header X-User-Id (UUID). Defina a variável de collection 'videoFilePath' com o caminho do vídeo ou selecione o arquivo no body. 202 Accepted."
-          }
+            "description": "Upload de vídeo (multipart). Exige token e header X-User-Id (UUID = videoUserId). Defina a variável 'videoFilePath' ou selecione o arquivo no body. 202 Accepted + body (id, status, createdAt). O script de teste salva o id retornado em videoId para usar em Get Video by Id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('videoId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     }

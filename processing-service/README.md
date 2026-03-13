@@ -1,147 +1,109 @@
-# Processing Service
+# ⚙️ Processing Service
 
-Microsserviço responsável por **processar vídeos** (extração de frames) no sistema Video Processor FIAP X. Não persiste dados: consome mensagens da fila, processa com FFmpeg e publica o resultado na fila `video.processing.completed.processing-service` para o **video-service** consumir. A entrada é exclusivamente via fila RabbitMQ; não há API REST exposta por este serviço.
+> Worker responsável por **processar vídeos** (extração de frames com FFmpeg) no Video Processor. Atende aos requisitos de **processar mais de um vídeo ao mesmo tempo** (múltiplos consumers) e **não perder requisição em picos** (fila durável). **Não expõe API REST** — entrada só via fila RabbitMQ; publica eventos de conclusão para o video-service e notification-service.
+
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Messaging-FF6600?logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com/)
+
+---
 
 ## Arquitetura
 
-- **Arquitetura hexagonal** (core + adapters), conforme [ARQUITETURA-HEXAGONAL.md](../ARQUITETURA-HEXAGONAL.md) do projeto.
-- **Sem persistência**: o serviço é stateless em relação a banco de dados; apenas processa e envia eventos na fila.
-- **Strategy pattern** para múltiplos formatos de vídeo (MP4, AVI, MOV, etc.) via FFmpeg.
-- **Paralelismo**: consumidores RabbitMQ configurados (5–20 concorrentes) para processar vários vídeos ao mesmo tempo.
+- **Arquitetura hexagonal** (core + adapters); ver seção "Padrão interno: Arquitetura Hexagonal" em [ARQUITETURA-DO-PROJETO.md](../ARQUITETURA-DO-PROJETO.md).
+- **Sem persistência:** stateless; apenas consome, processa e publica eventos.
+- **Strategy pattern** para formatos de vídeo (MP4, AVI, MOV, etc.) via FFmpeg.
+- **Paralelismo:** 5–20 consumers RabbitMQ (configurável no `application.yml`).
 
 ## Fluxo
 
-1. **Entrada**: o processing-service consome mensagens da fila de processamento (exchange `video.processing.exchange`, routing key `video.processing.requested`, queue `video.processing.queue`).
-2. **Processamento**:
-   - Valida `frameIntervalSeconds` contra a duração do vídeo (FFprobe).
-   - Detecta o formato do vídeo (extensão ou FFprobe).
-   - Escolhe a strategy por formato e executa extração de frames (FFmpeg) e geração do ZIP.
-3. **Saída**:
-   - **Sucesso**: publica mensagem na fila **`video.processing.completed.processing-service`** (exchange `video.processing.events.exchange`, routing key `video.processing.completed`) com `videoId`, `resultLocation` (caminho local ou **URL pública do S3**), `frameCount`, etc. O **video-service** consome essa fila e atualiza status e `zip_path` do vídeo. A UI usa o `zipPath` (URL ou path) para download.
-   - **Falha**: publica mensagem na fila **`video.processing.failed.processing-service`** (routing key `video.processing.failed`) com `videoId`, `errorMessage`, etc. para notificação/retry.
+1. **Entrada:** consome da fila `video.processing.queue` (exchange `video.processing.exchange`, routing key `video.processing.requested`). Lê o vídeo do volume compartilhado `/shared/videos`.
+2. **Processamento:** valida `frameIntervalSeconds`, detecta formato (FFprobe), extrai frames (FFmpeg) e gera ZIP.
+3. **Saída:** publica na exchange `video.processing.events.exchange`:
+   - **Sucesso:** routing key `video.processing.completed`, payload com `success: true`, `videoId`, `frameCount`, `zipPath` (local ou URL S3). O **video-service** consome da fila `video.processing.completed.video-service` e atualiza status e `zipPath`.
+   - **Falha:** routing key `video.processing.completed` com `success: false` (ou `video.processing.failed`, conforme config). O **notification-service** consome e envia e-mail quando `success === false`.
+
+> Detalhes das filas e bindings em [QUEUES.md](../QUEUES.md).
 
 ## Filas RabbitMQ
 
 | Fila / Exchange | Uso |
 |-----------------|-----|
 | `video.processing.exchange` + `video.processing.queue` | Entrada: requisições de processamento (consumidas por este serviço). |
-| `video.processing.events.exchange` + **`video.processing.completed.processing-service`** | Saída: processamento concluído (consumida pelo **video-service**). |
-| `video.processing.events.exchange` + `video.processing.failed.processing-service` | Saída: processamento com erro (consumida pelo **notification-service** ou video-service). |
+| `video.processing.events.exchange` | Saída: eventos de conclusão (sucesso/falha). Video-service e notification-service têm filas próprias com binding nessa exchange. |
 | `video.processing.dlq` | Dead letter para mensagens que falharam após retries. |
 
-## Formato da mensagem de conclusão (video.processing.completed.processing-service)
+## Formato da mensagem de conclusão
 
-O payload publicado na fila de conclusão segue o formato esperado pelo video-service (JSON), por exemplo:
+Exemplo de payload publicado (JSON):
 
 ```json
 {
   "videoId": "uuid-do-video",
   "success": true,
   "frameCount": 10,
-  "zipPath": "https://video-processor-zip-artifacts.s3.sa-east-1.amazonaws.com/{userUuid}/{videoId}.zip"
+  "zipPath": "https://bucket.s3.region.amazonaws.com/{userUuid}/{videoId}.zip"
 }
 ```
 
-Quando o S3 não está configurado, `zipPath` é o caminho local do ZIP (ex.: `/data/zips/{videoId}.zip`).
-
-O **video-service** consome `video.processing.completed.processing-service`, atualiza o vídeo (status CONCLUIDO, `zip_path` = `resultLocation`) e permite download: se `zip_path` for uma URL (http/https), a UI abre o link direto; senão usa o endpoint do backend.
+Sem S3, `zipPath` é o caminho local do ZIP. O **video-service** atualiza o vídeo (status CONCLUIDO, `zip_path`) e a UI usa `zipPath` para download.
 
 ## Armazenamento S3 (opcional)
 
-Se as variáveis de ambiente de S3 estiverem definidas (`PROCESSING_STORAGE_S3_BUCKET`, `AWS_REGION`, credenciais), após gerar o ZIP em disco o processing-service faz **upload para o bucket** e publica na fila a **URL pública** do objeto em vez do caminho local. A chave no S3 é organizada por **user UUID**: `{userUuid}/{videoId}.zip`.
+Com variáveis de ambiente de S3 definidas (`PROCESSING_STORAGE_S3_BUCKET`, `AWS_REGION`, credenciais), o ZIP é enviado ao bucket e a **URL pública** é publicada na fila. Chave no S3: `{userUuid}/{videoId}.zip`.
 
-### Variáveis de ambiente (S3)
+| Variável | Descrição |
+|----------|-----------|
+| `PROCESSING_STORAGE_S3_BUCKET` | Nome do bucket. |
+| `AWS_REGION` | Região (ex.: `sa-east-1`). |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credenciais IAM com permissão de escrita. |
 
-| Variável | Descrição | Obrigatório para S3 |
-|----------|-----------|----------------------|
-| `PROCESSING_STORAGE_S3_BUCKET` | Nome do bucket (ex.: `video-processor-zip-artifacts`) | Sim |
-| `AWS_REGION` | Região do bucket (ex.: `sa-east-1`) | Sim |
-| `AWS_ACCESS_KEY_ID` | Access key do usuário IAM com permissão de escrita no bucket | Sim |
-| `AWS_SECRET_ACCESS_KEY` | Secret da access key | Sim |
-
-Se o bucket não estiver configurado, o serviço mantém o comportamento anterior: publica o caminho local do ZIP e o video-service/UI usam o endpoint de download do backend.
-
-### Configuração do bucket na AWS
-
-- **Objetivo:** só a aplicação pode **escrever**; qualquer um com o link pode **ler**.
-- **Block public access:** desmarque “Block all public access” no bucket para que a política de bucket possa liberar leitura pública.
-- **Bucket policy (leitura pública):** adicione uma política que permita `s3:GetObject` com `Principal: "*"` no ARN do bucket (ex.: `arn:aws:s3:::video-processor-zip-artifacts/*`). Assim apenas leitura fica pública; `PutObject` continua restrito.
-- **IAM:** crie um usuário com política que permita `s3:PutObject` (e opcionalmente `s3:GetObject`) nesse bucket; use as credenciais (Access Key ID e Secret) nas variáveis de ambiente do processing-service.
-
-## Pré-requisitos
-
-- **Java 21**
-- **FFmpeg** (e FFprobe) instalado e no `PATH` (no container, a imagem do Docker já inclui FFmpeg).
-- **RabbitMQ** acessível (host/port/usuário/senha configurados).
+Sem S3, o serviço publica o caminho local; o video-service/UI usam o endpoint de download do backend. Configuração do bucket (leitura pública, IAM) em detalhe no [README raiz](../README.md#-variáveis-de-ambiente-docker-compose).
 
 ## Configuração
 
-Variáveis de ambiente principais:
-
 | Variável | Descrição | Default |
 |----------|-----------|---------|
-| `SPRING_RABBITMQ_HOST` | Host do RabbitMQ | `localhost` |
-| `SPRING_RABBITMQ_PORT` | Porta AMQP | `5672` |
-| `SPRING_RABBITMQ_USERNAME` | Usuário | `admin` |
-| `SPRING_RABBITMQ_PASSWORD` | Senha | `admin123` |
-| `PROCESSING_STORAGE_BASE_PATH` | Diretório base para vídeos e zips (usado pelo consumer ao ler vídeos e gravar ZIPs) | `/data` |
-| `PROCESSING_STORAGE_S3_BUCKET` | Nome do bucket S3 para upload dos zips (se vazio, não envia para S3) | — |
-| `AWS_REGION` | Região do bucket S3 | — |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credenciais do usuário IAM com permissão de escrita no bucket | — |
+| `SPRING_RABBITMQ_HOST` / `PORT` / `USERNAME` / `PASSWORD` | RabbitMQ | `localhost`, `5672`, `admin`, `admin123` |
+| `PROCESSING_STORAGE_BASE_PATH` | Diretório base para vídeos e ZIPs | `/data` (no Compose: `/shared/videos`) |
 
-Demais opções (exchanges, queues, concorrência) estão em `src/main/resources/application.yml`.
+Exchanges, queues e concorrência em `src/main/resources/application.yml`.
 
 ## Como rodar
 
-### Local (com RabbitMQ na máquina ou em container)
+**Com Docker Compose (raiz do projeto):**
 
 ```bash
-# Na raiz do repositório
+docker compose up -d
+```
+
+Ou build local dos serviços:
+
+```bash
+docker compose -f compose.yml -f compose.dev.yml up -d
+```
+
+**Local (Maven):** RabbitMQ e FFmpeg no PATH.
+
+```bash
 mvn -pl processing-service spring-boot:run
 ```
 
-### Com Docker Compose (projeto principal)
-
-Na raiz do repositório:
-
-```bash
-docker compose up -d rabbitmq
-docker compose up --build processing-service
-```
-
-O `compose.yml` do projeto já define RabbitMQ e processing-service; o processing-service depende apenas do RabbitMQ (sem PostgreSQL/Redis).
-
-### Testes
+**Testes:**
 
 ```bash
 mvn -pl processing-service test
 ```
 
-Testes de integração usam **Testcontainers** para subir um RabbitMQ efêmero.
+(Testcontainers para RabbitMQ.)
 
-## Integração com o Video Service
+## Sem API REST / Postman
 
-- O **video-service** persiste os vídeos (ex.: PostgreSQL), controla status (PENDENTE, PROCESSANDO, CONCLUIDO, ERRO) e expõe API para listar e fazer download.
-- Para disparar o processamento, o video-service (ou outro serviço) deve **publicar** uma mensagem na exchange/fila de entrada do processing-service (ex.: `video.processing.exchange` + routing key `video.processing.requested`), com payload contendo pelo menos: `videoId`, `inputLocation`, `frameIntervalSeconds`, `userId`, e opcionalmente `format`.
-- Ao concluir, o processing-service publica na **`video.processing.completed.processing-service`**. O video-service deve ter um **consumer** dessa fila para atualizar o vídeo (status CONCLUIDO, `zipPath` = `resultLocation`) e, se aplicável, mover/copiar o ZIP para o storage definitivo.
+Este serviço não expõe endpoints HTTP. Não há collection Postman; o fluxo é testado via upload no gateway/web-app e verificação de eventos e status no video-service.
 
-## Estrutura do serviço (resumo)
+## Documentação relacionada
 
-```
-processing-service/
-├── core/                    # Regras de negócio
-│   ├── domain/              # VideoFormat, VideoProcessingRequest, VideoDuration, ProcessingResult
-│   └── application/         # ProcessVideoUseCase, ports (VideoProcessingStrategyPort, VideoFormatDetectorPort, VideoMetadataPort, ProcessingEventPublisherPort, ZipStorageUploadPort)
-├── adapters/
-│   ├── driven/infra/        # FFmpeg strategies, detector, metadata, RabbitMqProcessingEventPublisher, S3ZipStorageUploadAdapter
-│   └── driver/api/          # RabbitMqConfig, VideoProcessingConsumer, DTOs da mensagem, exception handler (sem controller REST)
-├── src/main/resources/
-│   └── application.yml
-├── Dockerfile
-├── pom.xml
-└── README.md (este arquivo)
-```
-
-## Observação sobre persistência
-
-Este serviço **não utiliza banco de dados**. Todo estado do vídeo (status, zipPath, etc.) fica no **video-service**. Se no futuro for necessário manter algum estado local no processador (ex.: fila de reprocessamento, métricas por worker), pode-se avaliar a inclusão de persistência (por exemplo com **MongoDB**) apenas para esse fim, mantendo a regra de que “quem persiste o resultado do processamento é o video-service”.
+- **README raiz** — visão do projeto e variáveis S3: [../README.md](../README.md).
+- **QUEUES** — filas, exchanges e bindings: [../QUEUES.md](../QUEUES.md).
+- **Video Service** — quem publica o pedido e consome a conclusão: [../video-service/README.md](../video-service/README.md).
+- **Notification Service** — consome eventos de falha: [../notification-service/README.md](../notification-service/README.md).

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Auth Service - Video Processor",
-    "description": "Endpoints do Auth Service (registro, login, validação de token, usuário por id).\n\nRotas públicas: register, login, actuator.\nRotas protegidas (exigem header Authorization: Bearer <token>): validate, users/{id}.",
+    "description": "Endpoints do Auth Service (porta 8081). Acesso direto ao serviço; para uso via gateway use a collection do API Gateway.\n\nVariáveis: baseUrl (http://localhost:8081), token, userId (id Mongo para Get User), videoUserId (UUID = userUuid para X-User-Id no video-service).\n\nPúblicos: register, login, validate (query token=), actuator.\nProtegidos (Authorization: Bearer <token>): users/{id}.\nRota interna (sem JWT): GET /internal/users/by-uuid/{uuid} — usada pelo notification-service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -52,7 +52,7 @@
               "raw": "{\n  \"username\": \"postman_user\",\n  \"password\": \"senha123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login",
-            "description": "Login. 200 + token, type, expiresIn, username. Salva token para rotas protegidas."
+            "description": "Login. 200 + token, type, expiresIn (ms), username, userId, userUuid. Salva token, userId e videoUserId (userUuid) para rotas protegidas e para uso no video-service."
           },
           "event": [
             {
@@ -62,12 +62,27 @@
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
                   "  if (json.token) pm.collectionVariables.set('token', json.token);",
+                  "  if (json.userId) pm.collectionVariables.set('userId', json.userId);",
+                  "  if (json.userUuid) pm.collectionVariables.set('videoUserId', json.userUuid);",
                   "}"
                 ],
                 "type": "text/javascript"
               }
             }
           ]
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/validate?token={{token}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "validate"],
+              "query": [{ "key": "token", "value": "{{token}}" }]
+            },
+            "description": "Valida o JWT (rota pública). Token via query param. 200 + valid, subject."
+          }
         },
         {
           "name": "Actuator Health",
@@ -82,22 +97,6 @@
     {
       "name": "Protegidos (exigem token)",
       "item": [
-        {
-          "name": "Validate Token",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/validate?token={{token}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "validate"],
-              "query": [{ "key": "token", "value": "{{token}}" }]
-            },
-            "description": "Valida o JWT. Exige header Authorization. 200 + valid, subject."
-          }
-        },
         {
           "name": "Get User by Id",
           "request": {
@@ -159,7 +158,20 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/auth/users/{{userId}}",
-            "description": "Sem header Authorization. Esperado 403."
+            "description": "Sem header Authorization. Esperado 401 (ou 403 conforme Spring Security)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rota interna (service-to-service)",
+      "item": [
+        {
+          "name": "Get User by UUID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/internal/users/by-uuid/{{videoUserId}}",
+            "description": "Busca usuário por UUID. Rota interna (não exposta no gateway); sem JWT. Usada pelo notification-service. 200 + id, userUuid, username, email, enabled. Execute Register ou Login antes para ter videoUserId."
           }
         }
       ]

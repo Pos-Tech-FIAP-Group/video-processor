@@ -1,73 +1,64 @@
-# Video Processor – Web App
+# 🌐 Video Processor – Web App
 
-Frontend Angular do Video Processor. Login (usuários já cadastrados), listagem de vídeos, upload e detalhe com status do processamento. Comunica com o **API Gateway** em `http://localhost:8080`.
+> Frontend do Video Processor: interface em **Angular** para login, listagem de vídeos, upload e acompanhamento do status do processamento. Todas as chamadas HTTP passam pelo **API Gateway** (`http://localhost:8080`).
+
+[![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)](https://angular.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+---
+
+## Stack
+
+- **Angular** 19 (standalone components)
+- **Angular Material** (UI)
+- **RxJS** 7
 
 ## Pré-requisitos
 
-- Backend em execução (gateway, auth-service, video-service, etc.), por exemplo via `docker compose up` ou serviços rodando localmente.
-- Usuário já cadastrado (registro é feito fora do frontend, ex.: Postman em `POST /api/auth/register`).
+- **Node.js** e **npm** (ou yarn)
+- Backend em execução (gateway, auth, video-service, etc.), por exemplo via `docker compose up -d` na raiz do projeto
+- Usuário já cadastrado (registro via Postman em `POST /api/auth/register` ou pela tela de registro, se disponível)
 
-## Development server
+## Como rodar
+
+### Desenvolvimento
 
 ```bash
+npm install
 npm start
-# ou: npx ng serve
 ```
 
-Acesse `http://localhost:4200/`. A API está configurada em `src/environments/environment.ts` (`apiUrl: 'http://localhost:8080'`).
+Acesse **http://localhost:4200**. A API está configurada em `src/environments/environment.development.ts` (`apiUrl: 'http://localhost:8080'`).
 
-## Fluxo para testar
-
-1. **Login:** em `/login`, informe usuário e senha de um usuário já cadastrado.
-2. **Vídeos:** após login, você é redirecionado para a listagem em `/videos`.
-3. **Upload:** em "Upload" ou `/videos/upload`, selecione um arquivo de vídeo e envie.
-4. **Detalhe:** na listagem, clique em "Ver" em um vídeo para ver status (PENDENTE, PROCESSANDO, CONCLUIDO, ERRO), frames e datas.
-5. **Logout:** use "Sair" no topo para encerrar e voltar à tela de login.
-
-Em 401 (token inválido ou expirado), o app faz logout e redireciona para `/login`.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Build de produção
 
 ```bash
-ng generate component component-name
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+A saída fica em `dist/`. No Docker Compose da raiz, o web-app é servido via Nginx (porta 4200 mapeada para 80 no container).
 
-```bash
-ng generate --help
-```
+## Fluxo na aplicação
 
-## Building
+1. **Login** (`/login`) — informe usuário e senha de um usuário já cadastrado.
+2. **Vídeos** — após login, redirecionamento para a listagem em `/videos`.
+3. **Upload** (`/videos/upload`) — selecione um arquivo de vídeo e envie; o backend retorna 202 e o processamento é assíncrono.
+4. **Detalhe** — na listagem, clique em um vídeo para ver status (PENDENTE, PROCESSANDO, CONCLUIDO, ERRO), quantidade de frames, datas e link para download do ZIP (quando concluído).
+5. **Logout** — use "Sair" no topo para encerrar e voltar à tela de login.
 
-To build the project run:
+> Em **401** (token inválido ou expirado), o app faz logout e redireciona para `/login`.
 
-```bash
-ng build
-```
+## Estrutura relevante
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+| Pasta | Conteúdo |
+|-------|----------|
+| `src/app/core/` | Guards (auth), interceptors (token), services (auth) |
+| `src/app/features/auth/` | Login, registro |
+| `src/app/features/videos/` | Listagem, upload, detalhe |
+| `src/environments/` | `apiUrl` (gateway) |
 
-## Running unit tests
+## Documentação relacionada
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **README raiz** — como subir a stack completa com Docker e visão dos microsserviços: [../README.md](../README.md).
+- **API Gateway** — rotas e Postman: [../api-gateway/README.md](../api-gateway/README.md).
+- **Guia de testes** — fluxo completo (incl. uso do Web App): [../TESTES-FLUXO-COMPLETO.md](../TESTES-FLUXO-COMPLETO.md).
