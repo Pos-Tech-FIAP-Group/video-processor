@@ -90,6 +90,7 @@ services:
       - "4200:80"
     depends_on:
       - api-gateway
+  
   notification-service:
     build:
       context: .
@@ -177,4 +178,3 @@ volumes:
   rabbitmq_data:
   redis_data:
   video_shared:
-  redis_data:
