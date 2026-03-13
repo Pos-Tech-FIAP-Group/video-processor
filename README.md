@@ -191,6 +191,10 @@ Cada serviço e o frontend têm documentação própria na sua pasta. Resumo:
 
 Foi adicionada uma estrutura dedicada de carga em `load-tests/`.
 
+![teste_carga_01](https://github.com/user-attachments/assets/baeff683-a711-42a9-8935-c59902e52d06)
+
+![teste_carga_02](https://github.com/user-attachments/assets/044d6fe5-bcb9-4762-9b60-30c52a66dc77)
+
 ### Windows (PowerShell)
 
 Execucao basica com upload de video:
@@ -254,19 +258,21 @@ O projeto utiliza **GitHub Actions** para integração e entrega contínua de ca
 Abaixo estão as análises do SonarCloud para cada microsserviço. Os projetos estão em [SonarCloud](https://sonarcloud.io) (organização `pos-tech-fiap-group`).
 
 ### 🚪 API Gateway
-
+<img width="1012" height="185" alt="image" src="https://github.com/user-attachments/assets/8b735349-1d17-47fb-ae2f-9356e1d1ec6a" />
 
 
 ### 🔑 Auth Service
-
+<img width="1001" height="184" alt="image" src="https://github.com/user-attachments/assets/286d7da8-fe61-47b2-9df3-f05a81a3c0b4" />
 
 
 ### 🎞️ Video Service
-
+<img width="1006" height="180" alt="image" src="https://github.com/user-attachments/assets/2ac34085-99da-444a-95f7-d75144619eaf" />
 
 
 ### ⚙️ Processing Service
-
+<img width="1005" height="184" alt="image" src="https://github.com/user-attachments/assets/5e40454c-7faa-44c5-b7f0-726b62abf51a" />
 
 
 ### 📬 Notification Service
+<img width="1000" height="181" alt="image" src="https://github.com/user-attachments/assets/d95460b8-6a62-4655-9900-b4b3fb04d181" />
+
