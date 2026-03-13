@@ -1,6 +1,6 @@
 # Testes de carga com k6
 
-Os artefatos de carga ficam em `load-tests/k6/`.
+Os artefatos de carga ficam em `load-tests/k6/`. Para subir a stack antes de rodar os testes, veja o [README na raiz](../README.md) ou [TESTES-FLUXO-COMPLETO.md](../TESTES-FLUXO-COMPLETO.md).
 
 ## Cenario incluido
 

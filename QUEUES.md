@@ -1,5 +1,7 @@
 ### Apanhado das filas
 
+Documentação das filas RabbitMQ do Video Processor. Visão geral do sistema em [ARQUITETURA-DO-PROJETO.md](ARQUITETURA-DO-PROJETO.md).
+
 #### Tecnologias
 
 - **Mensageria**: RabbitMQ (Spring AMQP)
@@ -45,7 +47,7 @@
 - **Serviço(s)**:
   - **`video-service`**: consumidor
 - **Parâmetros**:
-  - **Exchange**: `video.processing.exchange` (Topic)  
+  - **Exchange**: `video.processing.events.exchange` (Topic)  
   - **Fila**: `video.processing.completed.video-service`  
   - **Routing key**: `video.processing.completed`
 
@@ -94,10 +96,18 @@
 
 ---
 
-### Intenções futuras
+#### 7. `video.processing.notification-service.queue` (eventos para notificação)
 
-- **`notification-service`**:
-  - Estrutura preparada para AMQP (config + adapter de consumer), mas **sem filas/exchanges/routing keys definidas ainda**.
+- **Tecnologia**: RabbitMQ  
+- **Serviço(s)**:
+  - **`notification-service`**: consumidor
+- **Parâmetros**:
+  - **Exchange**: `video.processing.events.exchange` (Topic)  
+  - **Fila**: `video.processing.notification-service.queue`  
+  - **Routing keys (bindings)**: `video.processing.completed` e `video.processing.failed`
+- **Uso**:
+  - O **processing-service** publica tanto sucesso quanto falha na routing key `video.processing.completed` (exchange `video.processing.events.exchange`). O notification-service consome dessa fila e, para cada mensagem, verifica o campo `success`: em caso de **falha**, obtém o e-mail do usuário no auth-service e envia notificação por e-mail; em caso de sucesso, ignora (não notifica).
+  - O envio é para um serviço de captura (**Mailtrap**): os e-mails chegam na caixa desse serviço. Requisito atendido: *notificação (e-mail) em caso de erro*.
 
 ---
 
@@ -112,8 +122,11 @@ flowchart LR
 
   subgraph processingService [processing-service]
     ps_consume["Consome pedidos (video.processing.queue)"]
-    ps_pub_ok["Publica sucesso (video.processing.completed.processing-service)"]
-    ps_pub_fail["Publica falha (video.processing.failed.processing-service)"]
+    ps_pub["Publica sucesso/falha (video.processing.completed)"]
+  end
+
+  subgraph notificationService [notification-service]
+    ns_consume["Consome eventos (video.processing.notification-service.queue)"]
   end
 
   vs_pub -->|"video.processing.exchange / video.processing.requested"| ex_main["video.processing.exchange"]
@@ -121,13 +134,12 @@ flowchart LR
 
   ps_consume -->|"DLQ em erro"| dlq["video.processing.dlq"]
 
-  ps_pub_ok -->|"video.processing.events.exchange / video.processing.completed"| ex_events["video.processing.events.exchange"]
-  ps_pub_fail -->|"video.processing.events.exchange / video.processing.failed"| ex_events
+  ps_pub -->|"video.processing.events.exchange / video.processing.completed"| ex_events["video.processing.events.exchange"]
 
-  ex_events -->|"video.processing.completed"| q_completed["video.processing.completed.processing-service"]
-  ex_events -->|"video.processing.failed"| q_failed["video.processing.failed.processing-service"]
-
-  ex_main -->|"video.processing.completed"| q_vs_completed["video.processing.completed.video-service"]
+  ex_events -->|"video.processing.completed"| q_vs_completed["video.processing.completed.video-service"]
   q_vs_completed --> vs_consume
+
+  ex_events -->|"completed + failed"| q_notif["video.processing.notification-service.queue"]
+  q_notif --> ns_consume
 ```
 
