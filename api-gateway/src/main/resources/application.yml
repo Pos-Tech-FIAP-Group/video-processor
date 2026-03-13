@@ -41,7 +41,7 @@ spring:
           filters:
             - name: RequestSize
               args:
-                maxSize: 500MB
+                maxSize: 5000MB
 
 management:
   endpoints:
