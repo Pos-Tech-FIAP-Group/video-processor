@@ -1,17 +1,10 @@
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
-
-WORKDIR /build
-
+WORKDIR /app
 COPY . .
-
-RUN mvn clean package -B -pl notification-service -am -DskipTests
+RUN mvn -pl notification-service -am clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
-
 WORKDIR /app
-
-COPY --from=build /build/notification-service/target/notification-service-*.jar app.jar
-
+COPY --from=build /app/notification-service/target/notification-service-1.0.0-SNAPSHOT.jar app.jar
 EXPOSE 8084
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

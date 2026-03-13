@@ -51,13 +51,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-        
+
   processing-service:
 #    build:
 #      context: .
 #      dockerfile: processing-service/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-processing-service:latest
     pull_policy: always
+    build:
+      context: .
+      dockerfile: processing-service/Dockerfile
     container_name: processing-service
     ports:
       - "8083:8083"
@@ -87,6 +90,25 @@ services:
       - "4200:80"
     depends_on:
       - api-gateway
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+      MAIL_HOST: sandbox.smtp.mailtrap.io
+      MAIL_PORT: 2525
+      MAIL_USERNAME: ${MAIL_USERNAME:-db7b281c04cce6}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-edf0b3531ea9ef}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   # --- Infrastructure Services ---
   rabbitmq:
@@ -155,3 +177,4 @@ volumes:
   rabbitmq_data:
   redis_data:
   video_shared:
+  redis_data:
