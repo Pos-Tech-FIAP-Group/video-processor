@@ -1,6 +1,7 @@
 package com.fiap.fiapx.video.core.application.usecases;
 
 import com.fiap.fiapx.video.core.application.exceptions.VideoNotFoundException;
+import com.fiap.fiapx.video.core.application.ports.DeleteTempVideoPort;
 import com.fiap.fiapx.video.core.application.ports.VideoRepositoryPort;
 import com.fiap.fiapx.video.core.domain.enums.VideoStatus;
 import com.fiap.fiapx.video.core.domain.model.Video;
@@ -25,6 +26,9 @@ class UpdateVideoProcessingResultUseCaseImplTest {
 
     @Mock
     private VideoRepositoryPort repository;
+
+    @Mock
+    private DeleteTempVideoPort deleteTempVideoPort;
 
     @InjectMocks
     private UpdateVideoProcessingResultUseCaseImpl useCase;
@@ -76,9 +80,51 @@ class UpdateVideoProcessingResultUseCaseImplTest {
                 .hasMessageContaining(id.toString());
     }
 
+    @Test
+    void deve_atualizar_video_e_excluir_arquivo_temporario_quando_processamento_for_concluido() {
+        UUID id = UUID.randomUUID();
+        Video video = videoProcessando(id);
+
+        when(repository.findById(id)).thenReturn(Optional.of(video));
+
+        useCase.executeSuccess(id, 30, "/tmp/video.zip");
+
+        ArgumentCaptor<Video> captor = ArgumentCaptor.forClass(Video.class);
+        verify(repository).save(captor.capture());
+
+        Video videoSalvo = captor.getValue();
+
+        assertThat(videoSalvo.getStatus()).isEqualTo(VideoStatus.CONCLUIDO);
+        assertThat(videoSalvo.getFrameCount()).isEqualTo(30);
+        assertThat(videoSalvo.getZipPath()).isEqualTo("/tmp/video.zip");
+
+        verify(deleteTempVideoPort).deleteIfExists(videoSalvo.getVideoPath());
+    }
+
+    @Test
+    void nao_deve_excluir_arquivo_temporario_quando_processamento_falhar() {
+        UUID id = UUID.randomUUID();
+        Video video = videoProcessando(id);
+
+        when(repository.findById(id)).thenReturn(Optional.of(video));
+
+        useCase.executeFailure(id, "erro no processamento");
+
+        ArgumentCaptor<Video> captor = ArgumentCaptor.forClass(Video.class);
+        verify(repository).save(captor.capture());
+
+        Video videoSalvo = captor.getValue();
+
+        assertThat(videoSalvo.getStatus()).isEqualTo(VideoStatus.ERRO);
+        assertThat(videoSalvo.getErrorMessage()).isEqualTo("erro no processamento");
+
+        verify(deleteTempVideoPort, org.mockito.Mockito.never())
+                .deleteIfExists(org.mockito.ArgumentMatchers.any());
+    }
+
     private Video videoProcessando(UUID id) {
         Instant now = Instant.now();
-        return new Video(id, UUID.randomUUID(), "video.mp4", "video/mp4", "/tmp/video.mp4", null,
+        return new Video(id, UUID.randomUUID(), "video.mp4", "video/mp4", "/tmp/videos/123/videoteste.mp4", null,
                 VideoStatus.PROCESSANDO, null, null, now, now, null);
     }
 }
