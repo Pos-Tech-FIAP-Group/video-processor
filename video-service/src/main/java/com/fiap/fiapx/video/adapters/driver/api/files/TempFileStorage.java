@@ -54,7 +54,7 @@ public class TempFileStorage implements DeleteTempVideoPort {
         }
 
         try {
-            Files.deleteIfExists(Paths.get(videoPath).toAbsolutePath().normalize());
+          Files.deleteIfExists(Paths.get(videoPath));
         } catch (IOException e) {
             throw new IllegalStateException("Falha ao remover o vídeo do diretório temporário.", e);
         }
