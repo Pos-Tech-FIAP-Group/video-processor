@@ -99,6 +99,7 @@ services:
     ports:
       - "8084:8084"
     environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}

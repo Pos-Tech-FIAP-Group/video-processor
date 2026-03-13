@@ -1,3 +1,6 @@
+auth:
+  service-url: ${AUTH_SERVICE_URL:http://auth-service:8081}
+
 spring:
   application:
     name: notification-service
