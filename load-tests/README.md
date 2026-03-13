@@ -10,6 +10,8 @@ Os artefatos de carga ficam em `load-tests/k6/`.
 
 ## Executar
 
+### Windows (PowerShell)
+
 Com a stack do projeto de pe:
 
 ```powershell
@@ -26,7 +28,33 @@ Exemplo com mais carga:
   -UploadDuration "1m"
 ```
 
+### Linux / Ubuntu (bash)
+
+Primeira vez, torne o script executavel:
+
+```bash
+chmod +x load-tests/k6/run-k6.sh
+```
+
+Com a stack do projeto de pe:
+
+```bash
+./load-tests/k6/run-k6.sh \
+  -VideoFile "/caminho/para/sample.mp4"
+```
+
+Exemplo com mais carga:
+
+```bash
+./load-tests/k6/run-k6.sh \
+  -VideoFile "/caminho/para/sample.mp4" \
+  -UploadVus 5 \
+  -UploadDuration "1m"
+```
+
 ## Parametros principais
+
+Os mesmos parametros sao aceitos tanto pelo script PowerShell (`run-k6.ps1`) quanto pelo script bash (`run-k6.sh`):
 
 - `-BaseUrl`: gateway alvo. Padrao `http://localhost:8080`.
 - `-VideoFile`: caminho do video real a ser enviado. Obrigatorio.

@@ -135,24 +135,52 @@ Se essas variáveis não forem definidas, o processing-service continua funciona
 
 Foi adicionada uma estrutura dedicada de carga em `load-tests/`.
 
-Execucao basica:
+### Windows (PowerShell)
 
-```powershell
-./load-tests/k6/run-k6.ps1
-```
-
-Com upload de video:
+Execucao basica com upload de video:
 
 ```powershell
 ./load-tests/k6/run-k6.ps1 `
-  -EnableUpload `
   -VideoFile "C:\caminho\para\sample.mp4"
 ```
 
-Relatorios gerados por execucao:
+Exemplo com mais carga:
+
+```powershell
+./load-tests/k6/run-k6.ps1 `
+  -VideoFile "C:\caminho\para\sample.mp4" `
+  -UploadVus 5 `
+  -UploadDuration "1m"
+```
+
+### Linux / Ubuntu (bash)
+
+Primeira vez, torne o script executavel:
+
+```bash
+chmod +x load-tests/k6/run-k6.sh
+```
+
+Execucao basica com upload de video:
+
+```bash
+./load-tests/k6/run-k6.sh \
+  -VideoFile "/caminho/para/sample.mp4"
+```
+
+Exemplo com mais carga:
+
+```bash
+./load-tests/k6/run-k6.sh \
+  -VideoFile "/caminho/para/sample.mp4" \
+  -UploadVus 5 \
+  -UploadDuration "1m"
+```
+
+Relatorios gerados por execucao (em ambos os scripts):
 
 - `load-tests/reports/k6-<timestamp>-raw.json`
 - `load-tests/reports/k6-<timestamp>-summary.json`
 - `load-tests/reports/k6-<timestamp>.html`
 
-Mais detalhes estao em `load-tests/README.md`.
+Mais detalhes (parametros suportados, observacoes) estao em `load-tests/README.md`.
