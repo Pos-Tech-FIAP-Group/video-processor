@@ -1,6 +1,8 @@
 package com.fiap.fiapx.video.adapters.driver.api.controller;
 
+import com.fiap.fiapx.video.adapters.driver.api.exceptionhandler.RestExceptionHandler;
 import com.fiap.fiapx.video.adapters.driver.api.files.TempFileStorage;
+import com.fiap.fiapx.video.adapters.driver.api.security.JwtAuthenticationFilter;
 import com.fiap.fiapx.video.core.application.exceptions.VideoNotFoundException;
 import com.fiap.fiapx.video.core.application.usecases.CreateVideoUseCase;
 import com.fiap.fiapx.video.core.application.usecases.FindVideoByIdUseCase;
@@ -10,7 +12,9 @@ import com.fiap.fiapx.video.core.domain.model.Video;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +32,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(VideoController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(RestExceptionHandler.class)
 class VideoControllerTest {
 
     @Autowired
@@ -44,6 +50,9 @@ class VideoControllerTest {
 
     @MockitoBean
     private TempFileStorage tempFileStorage;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void deve_retornar_202_quando_upload_for_valido() throws Exception {

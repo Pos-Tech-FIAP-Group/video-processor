@@ -5,3 +5,5 @@ spring:
         auto-startup: false
       direct:
         auto-startup: false
+  jwt:
+    secret: dev-secret-key-change-in-production-min-256-bits
