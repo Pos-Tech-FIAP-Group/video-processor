@@ -19,28 +19,6 @@ public class EmailNotificationAdapter implements SendNotificationPort {
     }
 
     @Override
-    public void sendProcessingCompletedNotification(String videoId, Integer frameCount, String zipPath) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("no-reply@fiapx.com");
-            message.setTo("igrfer@outlook.com");
-            message.setSubject("Processamento concluído com sucesso");
-            message.setText("""
-                    Seu vídeo foi processado com sucesso.
-
-                    videoId: %s
-                    frameCount: %s
-                    zipPath: %s
-                    """.formatted(videoId, frameCount, zipPath));
-
-            mailSender.send(message);
-            logger.info("E-mail de sucesso enviado. videoId={}", videoId);
-        } catch (Exception e) {
-            logger.error("Falha ao enviar e-mail de sucesso. videoId={}", videoId, e);
-        }
-    }
-
-    @Override
     public void sendProcessingFailedNotification(String videoId, String toEmail, String errorMessage) {
         if (toEmail == null || toEmail.isBlank()) {
             logger.warn("Nao enviando e-mail de falha: destinatario vazio. videoId={}", videoId);

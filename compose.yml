@@ -1,10 +1,8 @@
 services:
   # --- Application Services ---
   api-gateway:
-#    build:
-#      context: .
-#      dockerfile: api-gateway/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-api-gateway:latest
+    pull_policy: always
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -12,9 +10,6 @@ services:
       - auth-service
 
   auth-service:
-#    build:
-#      context: .
-#      dockerfile: auth-service/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-auth-service:latest
     pull_policy: always
     container_name: auth-service
@@ -27,9 +22,6 @@ services:
         condition: service_healthy
 
   video-service:
-#    build:
-#      context: .
-#      dockerfile: video-service/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-video-service:latest
     pull_policy: always
     container_name: video-service
@@ -53,9 +45,6 @@ services:
         condition: service_healthy
 
   processing-service:
-#    build:
-#      context: .
-#      dockerfile: processing-service/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-processing-service:latest
     pull_policy: always
     build:
@@ -92,9 +81,8 @@ services:
       - api-gateway
   
   notification-service:
-    build:
-      context: .
-      dockerfile: notification-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-notification-service:latest
+    pull_policy: always
     container_name: notification-service
     ports:
       - "8084:8084"

@@ -2,8 +2,6 @@ package com.fiap.fiapx.notification.core.application.ports;
 
 public interface SendNotificationPort {
 
-    void sendProcessingCompletedNotification(String videoId, Integer frameCount, String zipPath);
-
     /**
      * Envia e-mail de falha para o destinatario.
      *
