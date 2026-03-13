@@ -14,6 +14,6 @@ WORKDIR /app
 
 COPY --from=build /build/processing-service/target/processing-service-*.jar app.jar
 
-EXPOSE 8082
+EXPOSE 8083
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

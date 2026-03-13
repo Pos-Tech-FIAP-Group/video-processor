@@ -10,13 +10,58 @@ Cada microsserviço segue o **mesmo padrão de pastas** para facilitar o trabalh
 
 ## Como rodar (Docker)
 
-Na raiz do projeto:
+Na raiz do projeto há dois arquivos Compose:
+
+- **`compose.yml`** — define a stack completa: api-gateway, auth-service, video-service e processing-service usam **imagens pré-construídas** no GitHub Container Registry (GHCR). O web-app é buildado localmente; RabbitMQ, MongoDB, Redis e Postgres usam imagens públicas.
+- **`compose.dev.yml`** — arquivo de **override**: não substitui o `compose.yml`, e sim é carregado **em conjunto** com ele. Quando usado, adiciona `build` local aos quatro microsserviços e define `pull_policy: never`, dispensando o download de imagens do GHCR para desenvolvimento.
+
+A ordem dos arquivos importa: o segundo sobrescreve/estende o primeiro.
+
+### Dois modos de uso
+
+**1. Rodar com imagens do GHCR** (recomendado para quem só vai subir a stack):
 
 ```bash
 docker compose up -d
 ```
 
-Serviços disponíveis:
+Exige estar logado no GHCR para o pull das imagens dos quatro serviços (api-gateway, auth-service, video-service, processing-service). Veja a seção [Autenticação no GHCR](#autenticação-no-github-container-registry-ghcr) abaixo.
+
+**2. Rodar em modo desenvolvimento** (build local dos microsserviços):
+
+```bash
+docker compose -f compose.yml -f compose.dev.yml up -d
+```
+
+Os quatro microsserviços são buildados a partir do código local; **não é necessário** pull do GHCR para eles. Útil para quem altera código e quer testar sem publicar imagem.
+
+### Autenticação no GitHub Container Registry (GHCR)
+
+As imagens dos serviços estão em `ghcr.io/pos-tech-fiap-group/video-processor-*:latest`. Se o repositório de packages for privado, `docker compose up -d` (sem o override dev) falha no pull sem autenticação.
+
+**Criar um Personal Access Token (PAT) no GitHub:**
+
+- Acesse **Settings → Developer settings → Personal access tokens** (classic ou fine-grained).
+- **Classic:** use o escopo `read:packages` (e `write:packages` se for fazer push de imagens).
+- **Fine-grained:** conceda permissão de leitura nos packages da organização/repositório.
+
+**Fazer login no GHCR:**
+
+```bash
+echo "<SEU_TOKEN>" | docker login ghcr.io -u <SEU_USUARIO_GITHUB> --password-stdin
+```
+
+Ou usando variável de ambiente (recomendado; **não coloque o token no README ou no repositório**):
+
+```bash
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u <USUARIO> --password-stdin
+```
+
+Defina `GITHUB_TOKEN` no seu ambiente ou em um arquivo `.env` na raiz (e garanta que `.env` está no `.gitignore`).
+
+**Resumo:** sem login no GHCR, use o modo desenvolvimento (`-f compose.yml -f compose.dev.yml`) para subir os quatro serviços via build local. Com login no GHCR, `docker compose up -d` consegue baixar as imagens do registry.
+
+### Serviços disponíveis
 
 | Serviço            | Porta | URL base              |
 |--------------------|-------|------------------------|
@@ -32,7 +77,9 @@ Todas as chamadas do cliente devem ir pelo **gateway** (8080). O gateway encamin
 
 ### Variáveis de ambiente (Docker Compose)
 
-O `compose.yml` lê variáveis do ambiente ou de um arquivo `.env` na raiz. Para o **processing-service** enviar os zips de frames para o **S3** (em vez de só guardar em disco), defina:
+O `compose.yml` lê variáveis do ambiente ou de um arquivo `.env` na raiz. Para autenticação no GHCR (modo 1), você pode usar `GITHUB_TOKEN` no `.env` apenas como referência para o comando `docker login` — não exponha o valor no repositório.
+
+Para o **processing-service** enviar os zips de frames para o **S3** (em vez de só guardar em disco), defina:
 
 | Variável | Descrição |
 |----------|-----------|

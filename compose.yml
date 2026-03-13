@@ -1,9 +1,10 @@
 services:
   # --- Application Services ---
   api-gateway:
-    build:
-      context: .
-      dockerfile: api-gateway/Dockerfile
+#    build:
+#      context: .
+#      dockerfile: api-gateway/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-api-gateway:latest
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -11,9 +12,11 @@ services:
       - auth-service
 
   auth-service:
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
+#    build:
+#      context: .
+#      dockerfile: auth-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-auth-service:latest
+    pull_policy: always
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -24,9 +27,11 @@ services:
         condition: service_healthy
 
   video-service:
-    build:
-      context: .
-      dockerfile: video-service/Dockerfile
+#    build:
+#      context: .
+#      dockerfile: video-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-video-service:latest
+    pull_policy: always
     container_name: video-service
     ports:
       - "8082:8082"
@@ -40,7 +45,7 @@ services:
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
       APP_STORAGE_TEMP_DIR: /shared/videos
     volumes:
-      - ./tmp/videos:/shared/videos
+      - video_shared:/shared/videos
     depends_on:
       postgres-video:
         condition: service_healthy
@@ -48,10 +53,11 @@ services:
         condition: service_healthy
         
   processing-service:
-    build:
-      context: .
-      dockerfile: processing-service/Dockerfile
-    #    image: video-processor/processing-service:latest
+#    build:
+#      context: .
+#      dockerfile: processing-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-processing-service:latest
+    pull_policy: always
     container_name: processing-service
     ports:
       - "8083:8083"
@@ -67,7 +73,7 @@ services:
       AWS_REGION: ${AWS_REGION:-}
       PROCESSING_STORAGE_S3_BUCKET: ${PROCESSING_STORAGE_S3_BUCKET:-}
     volumes:
-      - ./tmp/videos:/shared/videos
+      - video_shared:/shared/videos
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -143,22 +149,9 @@ services:
       timeout: 5s
       retries: 10
 
-#  postgres-video:
-#    image: postgres:16-alpine
-#    container_name: postgres-video
-#    environment:
-#      SPRING_RABBITMQ_HOST: rabbitmq
-#      SPRING_RABBITMQ_PORT: 5672
-#      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
-#      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
-#    volumes:
-#      - ./storage:/data
-#    depends_on:
-#      rabbitmq:
-#        condition: service_healthy
-
 volumes:
   mongodb_data:
   postgres_video_data:
   rabbitmq_data:
   redis_data:
+  video_shared:
