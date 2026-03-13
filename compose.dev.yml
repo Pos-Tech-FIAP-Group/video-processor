@@ -23,3 +23,9 @@ services:
       dockerfile: processing-service/Dockerfile
     image: ghcr.io/pos-tech-fiap-group/video-processor-processing-service:latest
     pull_policy: never
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-notification-service:latest
+    pull_policy: never
