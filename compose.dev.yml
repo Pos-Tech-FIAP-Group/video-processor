@@ -1,4 +1,25 @@
 services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-api-gateway:latest
+    pull_policy: never
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-auth-service:latest
+    pull_policy: never
+  video-service:
+    build:
+      context: .
+      dockerfile: video-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-video-service:latest
+    pull_policy: never
   processing-service:
-    volumes:
-      - ./storage:/data
+    build:
+      context: .
+      dockerfile: processing-service/Dockerfile
+    image: ghcr.io/pos-tech-fiap-group/video-processor-processing-service:latest
+    pull_policy: never
