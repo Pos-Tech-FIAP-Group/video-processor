@@ -88,6 +88,7 @@ export class VideoUploadComponent {
   uploading = false;
   errorMessage = '';
   userUuid: string | null = null;
+  private readonly maxFileSizeBytes = 5000 * 1024 * 1024; // 5000MB
 
   constructor(
     private auth: AuthService,
@@ -100,7 +101,15 @@ export class VideoUploadComponent {
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.file = input.files?.[0] ?? null;
+    const selected = input.files?.[0] ?? null;
+
+    if (selected && selected.size > this.maxFileSizeBytes) {
+      this.file = null;
+      this.errorMessage = 'Vídeo muito grande. Tamanho máximo permitido é de 5000 MB.';
+      return;
+    }
+
+    this.file = selected;
     this.errorMessage = '';
   }
 
