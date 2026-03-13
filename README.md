@@ -131,3 +131,28 @@ Se essas variáveis não forem definidas, o processing-service continua funciona
 
 - **Video Service:** ver `video-service/README.md` (upload de vídeo, listagem, download do ZIP, consumo da fila de processamento concluído).
 - **Processing Service:** ver `processing-service/README.md` (processamento via fila RabbitMQ com FFmpeg, upload opcional para S3; **sem API REST**).
+## Teste de carga com k6
+
+Foi adicionada uma estrutura dedicada de carga em `load-tests/`.
+
+Execucao basica:
+
+```powershell
+./load-tests/k6/run-k6.ps1
+```
+
+Com upload de video:
+
+```powershell
+./load-tests/k6/run-k6.ps1 `
+  -EnableUpload `
+  -VideoFile "C:\caminho\para\sample.mp4"
+```
+
+Relatorios gerados por execucao:
+
+- `load-tests/reports/k6-<timestamp>-raw.json`
+- `load-tests/reports/k6-<timestamp>-summary.json`
+- `load-tests/reports/k6-<timestamp>.html`
+
+Mais detalhes estao em `load-tests/README.md`.
