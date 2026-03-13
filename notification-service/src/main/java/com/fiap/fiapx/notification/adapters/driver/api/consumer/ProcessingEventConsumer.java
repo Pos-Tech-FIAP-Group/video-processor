@@ -1,7 +1,6 @@
 package com.fiap.fiapx.notification.adapters.driver.api.consumer;
 
 import com.fiap.fiapx.notification.adapters.driver.api.dto.request.VideoProcessingEventRequest;
-import com.fiap.fiapx.notification.core.application.usecases.HandleProcessingCompletedUseCase;
 import com.fiap.fiapx.notification.core.application.usecases.HandleProcessingFailedUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +10,9 @@ public class ProcessingEventConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessingEventConsumer.class);
 
-    private final HandleProcessingCompletedUseCase handleProcessingCompletedUseCase;
     private final HandleProcessingFailedUseCase handleProcessingFailedUseCase;
 
-    public ProcessingEventConsumer(
-        HandleProcessingCompletedUseCase handleProcessingCompletedUseCase,
-        HandleProcessingFailedUseCase handleProcessingFailedUseCase
-    ) {
-        this.handleProcessingCompletedUseCase = handleProcessingCompletedUseCase;
+    public ProcessingEventConsumer(HandleProcessingFailedUseCase handleProcessingFailedUseCase) {
         this.handleProcessingFailedUseCase = handleProcessingFailedUseCase;
     }
 
@@ -30,11 +24,6 @@ public class ProcessingEventConsumer {
         logger.info("Received processing event. videoId={}, success={}", event.videoId(), event.success());
 
         if (event.success()) {
-            handleProcessingCompletedUseCase.execute(
-                event.videoId(),
-                event.frameCount(),
-                event.zipPath()
-            );
             return;
         }
 
