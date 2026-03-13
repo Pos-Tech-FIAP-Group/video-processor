@@ -70,7 +70,7 @@ public class ProcessVideoUseCase {
 
         } catch (Exception e) {
             logger.error("Video processing failed for videoId: {}", videoId, e);
-            eventPublisherPort.publishProcessingFailed(videoId, e.getMessage());
+            eventPublisherPort.publishProcessingFailed(videoId, request.userId(), e.getMessage());
 
             if (e instanceof IllegalArgumentException || e instanceof ProcessingException) {
                 throw e;

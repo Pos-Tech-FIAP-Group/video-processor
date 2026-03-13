@@ -123,7 +123,7 @@ class ProcessVideoUseCaseTest {
         );
 
         assertTrue(exception.getMessage().contains("cannot be greater than video duration"));
-        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), eq("user-456"), anyString());
     }
 
     @Test
@@ -139,7 +139,7 @@ class ProcessVideoUseCaseTest {
         ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
         assertTrue(ex.getMessage().contains("Failed to process video"));
 
-        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), eq("user-456"), anyString());
     }
 
     @Test
@@ -155,7 +155,7 @@ class ProcessVideoUseCaseTest {
         ProcessingException ex = assertThrows(ProcessingException.class, () -> processVideoUseCase.execute(request));
         assertSame(processingException, ex);
 
-        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), eq("user-456"), anyString());
     }
 
     @Test
@@ -212,7 +212,7 @@ class ProcessVideoUseCaseTest {
         );
 
         assertTrue(ex.getMessage().contains("Could not detect video format"));
-        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), anyString());
+        verify(eventPublisherPort).publishProcessingFailed(eq("video-123"), eq("user-456"), anyString());
     }
 
     @Test

@@ -59,17 +59,19 @@ class RabbitMqProcessingEventPublisherTest {
         assertEquals((Integer) (int) frameCount, payload.frameCount());
         assertEquals(resultLocation, payload.zipPath());
         assertEquals(null, payload.errorMessage());
+        assertEquals(null, payload.userId());
     }
 
     @Test
     void shouldPublishFailedEventWithErrorMessage() {
         String videoId = "video-456";
+        String userId = "user-789";
         String errorMessage = "Something went wrong";
 
         ArgumentCaptor<RabbitMqProcessingEventPublisher.VideoProcessingCompletedPayload> payloadCaptor =
                 ArgumentCaptor.forClass(RabbitMqProcessingEventPublisher.VideoProcessingCompletedPayload.class);
 
-        publisher.publishProcessingFailed(videoId, errorMessage);
+        publisher.publishProcessingFailed(videoId, userId, errorMessage);
 
         verify(rabbitTemplate).convertAndSend(
                 eq("video.processing.events.exchange"),
@@ -84,16 +86,18 @@ class RabbitMqProcessingEventPublisherTest {
         assertEquals(null, payload.frameCount());
         assertEquals(null, payload.zipPath());
         assertEquals(errorMessage, payload.errorMessage());
+        assertEquals(userId, payload.userId());
     }
 
     @Test
     void shouldPublishFailedEventWithDefaultErrorMessageWhenNull() {
         String videoId = "video-789";
+        String userId = "user-abc";
 
         ArgumentCaptor<RabbitMqProcessingEventPublisher.VideoProcessingCompletedPayload> payloadCaptor =
                 ArgumentCaptor.forClass(RabbitMqProcessingEventPublisher.VideoProcessingCompletedPayload.class);
 
-        publisher.publishProcessingFailed(videoId, null);
+        publisher.publishProcessingFailed(videoId, userId, null);
 
         verify(rabbitTemplate).convertAndSend(
                 eq("video.processing.events.exchange"),
@@ -106,6 +110,7 @@ class RabbitMqProcessingEventPublisherTest {
         assertEquals(videoId, payload.videoId());
         assertEquals(false, payload.success());
         assertEquals("Erro desconhecido", payload.errorMessage());
+        assertEquals(userId, payload.userId());
     }
 
     @Test
@@ -136,7 +141,7 @@ class RabbitMqProcessingEventPublisherTest {
                 );
 
         EventPublishingException ex = assertThrows(EventPublishingException.class, () ->
-                publisher.publishProcessingFailed("video-123", "error")
+                publisher.publishProcessingFailed("video-123", "user-1", "error")
         );
 
         assertEquals("Failed to publish event", ex.getMessage());

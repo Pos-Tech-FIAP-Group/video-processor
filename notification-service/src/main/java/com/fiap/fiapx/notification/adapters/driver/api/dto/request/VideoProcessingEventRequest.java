@@ -5,6 +5,7 @@ public record VideoProcessingEventRequest(
     boolean success,
     Integer frameCount,
     String zipPath,
-    String errorMessage
+    String errorMessage,
+    String userId
 ) {
 }

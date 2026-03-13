@@ -10,7 +10,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Configuração de segurança. Rotas públicas: registro, login, validação de token e actuator.
- * /api/auth/validate permite validar JWT via query (?token=...) para o Gateway ou clientes.
+ * /internal/** — uso service-to-service (ex.: notification), sem JWT; não exposto no gateway.
  * Demais rotas (/api/auth/users/**) exigem JWT válido no header Authorization.
  */
 @Configuration
@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/validate").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/internal/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -35,12 +35,13 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
     @Override
     public void publishProcessingCompleted(String videoId, String resultLocation, long frameCount) {
         try {
-            // Formato esperado pelo video-service: VideoProcessingCompletedMessage(videoId, success, frameCount, zipPath, errorMessage)
+            // Formato esperado pelo video-service: VideoProcessingCompletedMessage(..., userId opcional). Sucesso não notifica; userId null.
             var payload = new VideoProcessingCompletedPayload(
                 videoId,
                 true,
                 (int) frameCount,
                 resultLocation,
+                null,
                 null
             );
             rabbitTemplate.convertAndSend(eventsExchange, completedRoutingKey, payload);
@@ -52,15 +53,16 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
     }
 
     @Override
-    public void publishProcessingFailed(String videoId, String errorMessage) {
+    public void publishProcessingFailed(String videoId, String userId, String errorMessage) {
         try {
-            // Mesmo formato do completed para o video-service consumir com executeFailure
+            // Mesmo formato do completed; userId preenchido para notification-service notificar apenas em falha
             var payload = new VideoProcessingCompletedPayload(
                 videoId,
                 false,
                 null,
                 null,
-                errorMessage != null ? errorMessage : "Erro desconhecido"
+                errorMessage != null ? errorMessage : "Erro desconhecido",
+                userId
             );
             // Envia na mesma routing key do completed para o video-service consumir na mesma fila e chamar executeFailure
             rabbitTemplate.convertAndSend(eventsExchange, completedRoutingKey, payload);
@@ -72,13 +74,15 @@ public class RabbitMqProcessingEventPublisher implements ProcessingEventPublishe
     }
 
     /**
-     * Payload compatível com VideoProcessingCompletedMessage do video-service (videoId, success, frameCount, zipPath, errorMessage).
+     * Payload compatível com VideoProcessingCompletedMessage do video-service (videoId, success, frameCount, zipPath, errorMessage, userId).
+     * userId preenchido apenas em eventos de falha (para notificação); null em sucesso.
      */
     public record VideoProcessingCompletedPayload(
         String videoId,
         boolean success,
         Integer frameCount,
         String zipPath,
-        String errorMessage
+        String errorMessage,
+        String userId
     ) {}
 }

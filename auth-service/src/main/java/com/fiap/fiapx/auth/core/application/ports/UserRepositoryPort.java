@@ -3,6 +3,7 @@ package com.fiap.fiapx.auth.core.application.ports;
 import com.fiap.fiapx.auth.core.domain.model.User;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Porta de persistência de usuários. Implementada no adapter driven (MongoDB).
@@ -16,4 +17,6 @@ public interface UserRepositoryPort {
     User save(User user);
 
     Optional<User> findById(String id);
+
+    Optional<User> findByUserUuid(UUID userUuid);
 }

@@ -7,5 +7,6 @@ public record VideoProcessingCompletedMessage(
         boolean success,
         Integer frameCount,
         String zipPath,
-        String errorMessage
+        String errorMessage,
+        String userId
 ) {}

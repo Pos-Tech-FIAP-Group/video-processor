@@ -16,9 +16,11 @@ public interface ProcessingEventPublisherPort {
     
     /**
      * Publica evento de falha no processamento.
-     * 
+     * Inclui userId para o notification-service poder notificar o usuário (apenas eventos de erro disparam notificação).
+     *
      * @param videoId ID do vídeo que falhou
+     * @param userId ID do usuário (para notificação por e-mail)
      * @param errorMessage mensagem de erro
      */
-    void publishProcessingFailed(String videoId, String errorMessage);
+    void publishProcessingFailed(String videoId, String userId, String errorMessage);
 }

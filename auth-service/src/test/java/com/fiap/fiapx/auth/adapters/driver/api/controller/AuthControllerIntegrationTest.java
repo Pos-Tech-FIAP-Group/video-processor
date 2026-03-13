@@ -218,6 +218,43 @@ class AuthControllerIntegrationTest {
         }
     }
 
+    @Nested
+    @DisplayName("GET /internal/users/by-uuid/{uuid}")
+    class GetUserByUuidInternal {
+
+        @Test
+        @DisplayName("uuid existente sem token → 200 e corpo com email")
+        void uuid_existente_sem_token_retorna_200() {
+            String registerBody = """
+                    {"username":"internal_user","email":"internal@example.com","password":"senha123"}
+                    """;
+            ResponseEntity<UserResponse> reg = restTemplate.postForEntity("/api/auth/register", request(registerBody), UserResponse.class);
+            String userUuid = reg.getBody() != null ? reg.getBody().userUuid() : null;
+            assertThat(userUuid).isNotBlank();
+
+            ResponseEntity<UserResponse> response = restTemplate.getForEntity(
+                    "/internal/users/by-uuid/" + userUuid,
+                    UserResponse.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().username()).isEqualTo("internal_user");
+            assertThat(response.getBody().email()).isEqualTo("internal@example.com");
+            assertThat(response.getBody().userUuid()).isEqualTo(userUuid);
+        }
+
+        @Test
+        @DisplayName("uuid inexistente → 404")
+        void uuid_inexistente_retorna_404() {
+            ResponseEntity<String> response = restTemplate.getForEntity(
+                    "/internal/users/by-uuid/550e8400-e29b-41d4-a716-446655440000",
+                    String.class
+            );
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+    }
+
     private static HttpEntity<String> request(String json) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
