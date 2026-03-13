@@ -1,6 +1,7 @@
 package com.fiap.fiapx.notification.adapters.driver.api.config;
 
 import com.fiap.fiapx.notification.adapters.driver.api.consumer.ProcessingEventConsumer;
+import com.fiap.fiapx.notification.core.application.ports.GetUserByUuidPort;
 import com.fiap.fiapx.notification.core.application.ports.SendNotificationPort;
 import com.fiap.fiapx.notification.core.application.usecases.HandleProcessingCompletedUseCase;
 import com.fiap.fiapx.notification.core.application.usecases.HandleProcessingFailedUseCase;
@@ -19,9 +20,10 @@ public class NotificationBeansConfig {
 
     @Bean
     public HandleProcessingFailedUseCase handleProcessingFailedUseCase(
+        GetUserByUuidPort getUserByUuidPort,
         SendNotificationPort sendNotificationPort
     ) {
-        return new HandleProcessingFailedUseCase(sendNotificationPort);
+        return new HandleProcessingFailedUseCase(getUserByUuidPort, sendNotificationPort);
     }
 
     @Bean

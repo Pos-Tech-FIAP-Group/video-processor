@@ -1,0 +1,24 @@
+# Perfil para teste de integracao: RabbitMQ via Testcontainers; auth mockado no teste
+auth:
+  service-url: http://localhost:9999
+
+spring:
+  rabbitmq:
+    events:
+      exchange: video.processing.events.exchange
+      routing-key:
+        completed: video.processing.completed
+        failed: video.processing.failed
+    notification:
+      queue: video.processing.notification-service.queue
+
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+
+management:
+  health:
+    mail:
+      enabled: false

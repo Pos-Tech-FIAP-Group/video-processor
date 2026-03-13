@@ -40,6 +40,7 @@ public class ProcessingEventConsumer {
 
         handleProcessingFailedUseCase.execute(
             event.videoId(),
+            event.userId(),
             event.errorMessage()
         );
     }

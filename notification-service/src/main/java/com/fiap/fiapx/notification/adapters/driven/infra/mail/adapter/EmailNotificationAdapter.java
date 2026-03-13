@@ -41,11 +41,15 @@ public class EmailNotificationAdapter implements SendNotificationPort {
     }
 
     @Override
-    public void sendProcessingFailedNotification(String videoId, String errorMessage) {
+    public void sendProcessingFailedNotification(String videoId, String toEmail, String errorMessage) {
+        if (toEmail == null || toEmail.isBlank()) {
+            logger.warn("Nao enviando e-mail de falha: destinatario vazio. videoId={}", videoId);
+            return;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("no-reply@fiapx.com");
-            message.setTo("igrfer@outlook.com");
+            message.setTo(toEmail);
             message.setSubject("Falha no processamento do vídeo");
             message.setText("""
                     Ocorreu uma falha no processamento do vídeo.
@@ -55,7 +59,7 @@ public class EmailNotificationAdapter implements SendNotificationPort {
                     """.formatted(videoId, errorMessage));
 
             mailSender.send(message);
-            logger.info("E-mail de falha enviado. videoId={}", videoId);
+            logger.info("E-mail de falha enviado. videoId={}, to={}", videoId, toEmail);
         } catch (Exception e) {
             logger.error("Falha ao enviar e-mail de erro. videoId={}", videoId, e);
         }
