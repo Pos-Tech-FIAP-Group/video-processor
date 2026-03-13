@@ -44,6 +44,14 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         return repository.findById(id).map(this::toUser);
     }
 
+    @Override
+    public Optional<User> findByUserUuid(UUID userUuid) {
+        if (userUuid == null) {
+            return Optional.empty();
+        }
+        return repository.findByUserUuid(userUuid.toString()).map(this::toUser);
+    }
+
     private User toUser(UserDocument doc) {
         Set<UserRole> roles = doc.getRoles() == null
                 ? Collections.emptySet()

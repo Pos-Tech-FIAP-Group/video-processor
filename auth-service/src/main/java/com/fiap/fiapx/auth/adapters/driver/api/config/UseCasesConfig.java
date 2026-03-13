@@ -5,6 +5,7 @@ import com.fiap.fiapx.auth.core.application.ports.TokenProviderPort;
 import com.fiap.fiapx.auth.core.application.ports.UserRepositoryPort;
 import com.fiap.fiapx.auth.core.application.usecases.AuthenticateUserUseCase;
 import com.fiap.fiapx.auth.core.application.usecases.GetUserByIdUseCase;
+import com.fiap.fiapx.auth.core.application.usecases.GetUserByUuidUseCase;
 import com.fiap.fiapx.auth.core.application.usecases.RegisterUserUseCase;
 import com.fiap.fiapx.auth.core.application.usecases.ValidateTokenUseCase;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,5 +37,10 @@ public class UseCasesConfig {
     @Bean
     public GetUserByIdUseCase getUserByIdUseCase(UserRepositoryPort userRepository) {
         return new GetUserByIdUseCase(userRepository);
+    }
+
+    @Bean
+    public GetUserByUuidUseCase getUserByUuidUseCase(UserRepositoryPort userRepository) {
+        return new GetUserByUuidUseCase(userRepository);
     }
 }

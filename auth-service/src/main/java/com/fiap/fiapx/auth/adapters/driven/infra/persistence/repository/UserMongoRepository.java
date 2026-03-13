@@ -10,4 +10,6 @@ public interface UserMongoRepository extends MongoRepository<UserDocument, Strin
     Optional<UserDocument> findByUsername(String username);
 
     Optional<UserDocument> findByEmail(String email);
+
+    Optional<UserDocument> findByUserUuid(String userUuid);
 }

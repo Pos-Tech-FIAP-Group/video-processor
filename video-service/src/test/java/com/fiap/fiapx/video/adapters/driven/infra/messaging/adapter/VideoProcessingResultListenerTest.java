@@ -29,6 +29,7 @@ class VideoProcessingResultListenerTest {
                 true,
                 50,
                 "/tmp/video.zip",
+                null,
                 null
         );
 
@@ -45,7 +46,8 @@ class VideoProcessingResultListenerTest {
                 false,
                 null,
                 null,
-                "falha no processamento"
+                "falha no processamento",
+                null
         );
 
         listener.onMessage(message);
@@ -59,6 +61,7 @@ class VideoProcessingResultListenerTest {
         VideoProcessingCompletedMessage message = new VideoProcessingCompletedMessage(
                 videoId,
                 false,
+                null,
                 null,
                 null,
                 null
