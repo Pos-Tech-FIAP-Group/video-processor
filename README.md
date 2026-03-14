@@ -15,8 +15,8 @@
 | Nome | RM |
 |------|-----|
 | Hugo Braz de Seixas | 364849 |
-| Igor de Sá Fernandes | 36305 |
-| Marcus Fábio Liberato Salviano | 36445 |
+| Igor de Sá Fernandes | 363052 |
+| Marcus Fábio Liberato Salviano | 364454  |
 | Vitor Braz Silva | 362120 |
 
 ## 🎥 Vídeo de Apresentação
