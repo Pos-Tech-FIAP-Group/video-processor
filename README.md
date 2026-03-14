@@ -21,7 +21,7 @@
 
 ## 🎥 Vídeo de Apresentação
 
-[🔗 Link do vídeo de apresentação do projeto](URL_AQUI)
+https://www.youtube.com/watch?v=OLCacbHab_k
 
 ## 📐 Documentação da arquitetura
 
