@@ -25,7 +25,7 @@
 
 ## 📐 Documentação da arquitetura
 
-A arquitetura proposta do sistema (microsserviços, event-driven, API Gateway, requisitos essenciais e diagrama) está descrita em **[ARQUITETURA-DO-PROJETO.md](./ARQUITETURA-DO-PROJETO.md)**. Outros documentos na raiz: [QUEUES.md](./QUEUES.md) (filas RabbitMQ).
+A arquitetura proposta do sistema (microsserviços, event-driven, API Gateway, requisitos essenciais e diagrama) está descrita em **[ARQUITETURA-DO-PROJETO.md](./ARQUITETURA-DO-PROJETO.md)**. Outros documentos na raiz: [QUEUES.md](./QUEUES.md) (filas RabbitMQ), [TESTES-FLUXO-COMPLETO.md](./TESTES-FLUXO-COMPLETO.md) (guia de testes do fluxo completo).
 
 ## 📋 Visão geral do projeto
 
@@ -186,6 +186,12 @@ Cada serviço e o frontend têm documentação própria na sua pasta. Resumo:
 - **📬 Notification Service** — Consome eventos de falha, obtém e-mail no auth-service e envia via SMTP (Mailtrap em dev). Sem API REST. Detalhes: [notification-service/README.md](notification-service/README.md).
 
 > **Postman:** collections para API Gateway, Auth e Video Service; fluxo completo em [resources/Fluxo-Completo.postman_collection.json](resources/Fluxo-Completo.postman_collection.json).
+
+## 📧 Notificação por e-mail (Mailtrap)
+
+O **notification-service** envia os e-mails de falha de processamento para o **Mailtrap** (caixa do serviço). Os emails ficam disponíveis no painel do Mailtrap para inspeção. Abaixo, a caixa de entrada do Mailtrap com as notificações enviadas quando um vídeo falha no processamento.
+
+
 
 ## ⚡ Teste de carga com k6
 

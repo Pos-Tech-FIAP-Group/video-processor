@@ -157,7 +157,7 @@ curl http://localhost:8080/api/videos/health
    -H "Authorization: Bearer <JWT>"
  ```
  
- - Esperado: página com o novo vídeo; status inicial normalmente `PENDING` ou `PROCESSING`; metadados (nome, contentType, etc.).
+ - Esperado: página com o novo vídeo; status inicial `PROCESSANDO`; metadados (nome, contentType, etc.).
  
  Opcionalmente, é possível buscar por ID específico:
  
@@ -238,7 +238,7 @@ curl http://localhost:8080/api/videos/health
  
  Esperado:
  
- - Status do vídeo: `COMPLETED` (sucesso) ou `FAILED` (erro). Em sucesso, o campo `zipPath` traz o caminho do ZIP (ou URL se S3 estiver configurado).
+ - Status do vídeo: `CONCLUIDO` (sucesso) ou `FALHA` (erro). Em sucesso, o campo `zipPath` traz o caminho do ZIP (ou URL se S3 estiver configurado).
 
  ### 6.2 Conferir no banco (opcional)
  

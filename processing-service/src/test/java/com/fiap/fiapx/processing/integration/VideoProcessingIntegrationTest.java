@@ -23,7 +23,6 @@ import static org.awaitility.Awaitility.await;
  */
 @SpringBootTest
 @Testcontainers
-@Disabled("Requires Docker - enable when running with Testcontainers")
 class VideoProcessingIntegrationTest {
     
     @Container
