@@ -189,7 +189,7 @@ Cada serviço e o frontend têm documentação própria na sua pasta. Resumo:
 
 ## 📧 Notificação por e-mail (Mailtrap)
 
-O **notification-service** envia os e-mails de falha de processamento para o **Mailtrap** (caixa do serviço). Os emails ficam disponíveis no painel do Mailtrap para inspeção. Abaixo, a caixa de entrada do Mailtrap com as notificações enviadas quando um vídeo falha no processamento.
+O **notification-service** envia os e-mails de falha de processamento para o **Mailtrap** (caixa do serviço). Os emails ficam disponíveis no painel do Mailtrap para inspeção. Abaixo, a caixa de entrada do Mailtrap com as notificações enviadas quando um vídeo falha no processamento e algumas de sucesso que fizemos apenas para testar o serviço.
 
 ![mailTrap](https://github.com/user-attachments/assets/782c9bfa-d9ec-414e-9045-ca50ab68ae85)
 
